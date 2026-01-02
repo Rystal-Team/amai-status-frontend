@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
 import styles from "@/styles/theme.module.css";
 import { StatusIcon, HeartbeatBar } from "./StatusComponents";
+import { StatusHeader } from "./StatusHeader";
+import { StatusItem } from "./StatusItem";
 import { LanguageSelector } from "../selectors/LanguageSelector";
 import { UpdateIntervalSelector } from "../selectors/UpdateIntervalSelector";
 import { HeartbeatIntervalSelector } from "../selectors/HeartbeatIntervalSelector";
@@ -754,30 +756,13 @@ export function StatusPage() {
 
 	const mainContent = (
 		<>
-			<header className={styles.header}>
-				<div className={styles.container}>
-					<div className={styles.headerContent}>
-						<div className={styles.headerLeft}>
-							<img src={`${apiBase}/logo.png`} alt="logo" className={styles.logo} />
-						</div>
-						<LanguageSelector
-							language={state.language}
-							onLanguageChange={state.setLanguage}
-						/>
-					</div>
-					<div className={styles.headerCenter}>
-						<StatusIcon status={state.overallStatus} />
-						<h1 className={styles.brand}>{getStatusLabel(state.overallStatus)}</h1>
-						<p className={styles.subtitle}>
-							{state.overallStatus === "up"
-								? t(state.language, "status.up")
-								: state.overallStatus === "degraded"
-								? t(state.language, "status.degraded")
-								: t(state.language, "status.down")}
-						</p>
-					</div>
-				</div>
-			</header>
+			<StatusHeader
+				apiBase={apiBase}
+				overallStatus={state.overallStatus}
+				language={state.language}
+				getStatusLabel={getStatusLabel}
+				onLanguageChange={state.setLanguage}
+			/>
 
 			<main className={styles.container}>
 				<section className={styles.statusOverview}>
@@ -790,42 +775,24 @@ export function StatusPage() {
 						const metadata = getHeartbeatMetadata(monitor);
 						const interval = state.heartbeatIntervals[monitor.name] || "all";
 						return (
-							<div
+							<StatusItem
 								key={monitor.name}
-								className={`${styles.statusItem} ${styles[status]}`}
-							>
-								<div className={styles.statusHeader}>
-									<div className={styles.statusText}>
-										<h2>{monitor.name}</h2>
-									</div>
-									<div className={styles.statusHeaderRight}>
-										<HeartbeatIntervalSelector
-											language={state.language}
-											onIntervalChange={createHeartbeatIntervalChangeHandler(monitor)}
-										/>
-										<div className={styles.statusIndicator}>
-											<p>{text}</p>
-											<span className={styles.indicator} />
-										</div>
-									</div>
-								</div>
-								<div className={styles.heartbeatContainer}>
-									<HeartbeatBar
-										data={heartbeat}
-										timestamps={timestamps}
-										responseTimes={responseTimes}
-										metadata={metadata}
-										maxItems={state.heartbeatItemCount}
-										interval={interval}
-										onHover={handleHeartbeatHover}
-										onMouseMove={handleTooltipMouseMove}
-										onMouseLeave={handleTooltipMouseLeave}
-									/>
-									<div className={styles.uptimeText}>
-										{t(state.language, "uptime")} {uptime}%
-									</div>
-								</div>
-							</div>
+								monitor={monitor}
+								language={state.language}
+								heartbeat={heartbeat}
+								timestamps={timestamps}
+								responseTimes={responseTimes}
+								metadata={metadata}
+								uptime={uptime}
+								statusText={text}
+								statusValue={status}
+								interval={interval}
+								maxItems={state.heartbeatItemCount}
+								onIntervalChange={createHeartbeatIntervalChangeHandler(monitor)}
+								onHeartbeatHover={handleHeartbeatHover}
+								onTooltipMouseMove={handleTooltipMouseMove}
+								onTooltipMouseLeave={handleTooltipMouseLeave}
+							/>
 						);
 					})}
 				</section>
