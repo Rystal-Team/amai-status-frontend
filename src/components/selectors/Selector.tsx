@@ -37,7 +37,12 @@ export function Selector({
 			onChange(selectedValue);
 			setIsOpen(false);
 		},
-		[onChange],
+		[onChange]
+	);
+
+	const createSelectHandler = useCallback(
+		(selectedValue: string | number) => () => handleSelect(selectedValue),
+		[handleSelect]
 	);
 
 	const handleToggle = useCallback(() => {
@@ -89,7 +94,7 @@ export function Selector({
 							className={`${styles.selectorOption} ${
 								value === option.value ? styles.active : ""
 							}`}
-							onClick={() => handleSelect(option.value)}
+							onClick={createSelectHandler(option.value)}
 						>
 							{option.label}
 						</button>
