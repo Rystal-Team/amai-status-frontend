@@ -289,6 +289,7 @@ const HeartbeatBarComponent = ({
 		<div
 			ref={containerRef}
 			className={styles.heartbeatContainer}
+			role="presentation"
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
 		>
@@ -305,6 +306,8 @@ const HeartbeatBarComponent = ({
 						<div
 							key={item.id}
 							className={`${styles.heartbeatDay} ${styles[item.status]}`}
+							role="img"
+							aria-label={`${item.status} status`}
 							onMouseEnter={createItemMouseEnterHandler(item)}
 						/>
 					))}
