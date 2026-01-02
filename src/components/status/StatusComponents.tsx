@@ -54,11 +54,12 @@ interface HeartbeatBarProps {
 			count?: number;
 			avgResponseTime?: number | null;
 			typeLabel?: string;
-		} | null,
+		} | null
 	) => void;
 	onMouseMove?: (x: number, y: number) => void;
 	onMouseLeave?: () => void;
 	maxItems?: number;
+	interval?: "all" | "hour" | "day" | "week";
 }
 
 const HeartbeatBarComponent = ({
@@ -70,7 +71,20 @@ const HeartbeatBarComponent = ({
 	onMouseMove,
 	onMouseLeave,
 	maxItems = 90,
+	interval = "all",
 }: HeartbeatBarProps) => {
+	const getEffectiveMaxItems = (
+		baseMax: number,
+		currentInterval: string
+	): number => {
+		if (currentInterval === "all") return baseMax;
+		if (currentInterval === "hour") return Math.floor(baseMax / 1.25);
+		if (currentInterval === "day") return Math.floor(baseMax / 1.5);
+		if (currentInterval === "week") return Math.floor(baseMax / 1.75);
+		return baseMax;
+	};
+
+	const effectiveMaxItems = getEffectiveMaxItems(maxItems, interval);
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 	const [displayItems, setDisplayItems] = useState<
 		Array<{
@@ -83,8 +97,8 @@ const HeartbeatBarComponent = ({
 			typeLabel?: string;
 		}>
 	>(() => {
-		const slicedData = data.slice(-maxItems);
-		const startIdx = Math.max(0, data.length - maxItems);
+		const slicedData = data.slice(-effectiveMaxItems);
+		const startIdx = Math.max(0, data.length - effectiveMaxItems);
 		return slicedData.map((status, i) => ({
 			status,
 			id: `item-${i}`,
@@ -108,8 +122,8 @@ const HeartbeatBarComponent = ({
 		const lastLen = lastDataLenRef.current;
 
 		if (currentLen <= lastLen) {
-			const slicedData = data.slice(-maxItems);
-			const startIdx = Math.max(0, data.length - maxItems);
+			const slicedData = data.slice(-effectiveMaxItems);
+			const startIdx = Math.max(0, data.length - effectiveMaxItems);
 			setDisplayItems(
 				slicedData.map((status, i) => ({
 					status,
@@ -119,11 +133,11 @@ const HeartbeatBarComponent = ({
 					count: metadata?.[startIdx + i]?.count,
 					avgResponseTime: metadata?.[startIdx + i]?.avgResponseTime,
 					typeLabel: metadata?.[startIdx + i]?.typeLabel,
-				})),
+				}))
 			);
 			setTranslateX(0);
 		}
-	}, [data, timestamps, responseTimes, metadata, maxItems]);
+	}, [data, timestamps, responseTimes, metadata, effectiveMaxItems]);
 
 	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
 		onMouseMove?.(e.clientX, e.clientY);
@@ -168,8 +182,8 @@ const HeartbeatBarComponent = ({
 		const lastLen = lastDataLenRef.current;
 
 		if (currentLen > lastLen) {
-			const newItems = data.slice(-maxItems);
-			const startIdx = Math.max(0, data.length - maxItems);
+			const newItems = data.slice(-effectiveMaxItems);
+			const startIdx = Math.max(0, data.length - effectiveMaxItems);
 			const newTimestamps = timestamps.slice(startIdx);
 			const newResponseTimes = responseTimes?.slice(startIdx) || [];
 			const newMetadata = metadata?.slice(startIdx) || [];
@@ -220,7 +234,14 @@ const HeartbeatBarComponent = ({
 
 			lastDataLenRef.current = currentLen;
 		}
-	}, [data, maxItems, displayItems.length, timestamps, responseTimes, metadata]);
+	}, [
+		data,
+		effectiveMaxItems,
+		displayItems.length,
+		timestamps,
+		responseTimes,
+		metadata,
+	]);
 
 	return (
 		<div
@@ -269,9 +290,10 @@ export const HeartbeatBar = memo(
 			prevProps.timestamps === nextProps.timestamps &&
 			prevProps.maxItems === nextProps.maxItems &&
 			prevProps.responseTimes === nextProps.responseTimes &&
-			prevProps.metadata === nextProps.metadata
+			prevProps.metadata === nextProps.metadata &&
+			prevProps.interval === nextProps.interval
 		);
-	},
+	}
 );
 
 HeartbeatBar.displayName = "HeartbeatBar";
