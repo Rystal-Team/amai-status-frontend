@@ -46,6 +46,8 @@ export function LoadingScreen({
 
 			return () => clearTimeout(fadeTimer);
 		}
+
+		return undefined;
 	}, [progress, onFadeComplete]);
 
 	return (
