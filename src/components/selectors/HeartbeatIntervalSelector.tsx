@@ -28,12 +28,12 @@ export function HeartbeatIntervalSelector({
 			setSelectedInterval(interval);
 			onIntervalChange(interval);
 		},
-		[onIntervalChange]
+		[onIntervalChange],
 	);
 
 	const createIntervalSelectHandler = useCallback(
 		(interval: Interval) => () => handleSelectInterval(interval),
-		[handleSelectInterval]
+		[handleSelectInterval],
 	);
 
 	const handlePrevious = useCallback(() => {

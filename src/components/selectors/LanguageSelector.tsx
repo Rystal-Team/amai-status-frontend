@@ -43,7 +43,7 @@ export function LanguageSelector({
 			setCookie(STORAGE_KEY_LANGUAGE, lang);
 			onLanguageChange?.(lang);
 		},
-		[onLanguageChange]
+		[onLanguageChange],
 	);
 
 	if (!mounted) return null;

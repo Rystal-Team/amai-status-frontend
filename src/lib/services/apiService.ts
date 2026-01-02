@@ -60,7 +60,7 @@ export const apiService = {
 	 */
 	async getHeartbeat(
 		monitorName: string,
-		hoursNeeded: number
+		hoursNeeded: number,
 	): Promise<AggregatedHeartbeatResponse> {
 		const response = await apiClient.get<AggregatedHeartbeatResponse>(
 			"/api/heartbeat",
@@ -69,7 +69,7 @@ export const apiService = {
 					monitor_name: monitorName,
 					hours: hoursNeeded,
 				},
-			}
+			},
 		);
 		return response.data;
 	},

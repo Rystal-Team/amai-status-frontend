@@ -63,7 +63,7 @@ interface HeartbeatBarProps {
 			typeLabel?: string;
 			degradedCount?: number;
 			downCount?: number;
-		} | null
+		} | null,
 	) => void;
 	onMouseMove?: (x: number, y: number) => void;
 	onMouseLeave?: () => void;
@@ -84,7 +84,7 @@ const HeartbeatBarComponent = ({
 }: HeartbeatBarProps) => {
 	const getEffectiveMaxItems = (
 		baseMax: number,
-		currentInterval: string
+		currentInterval: string,
 	): number => {
 		if (currentInterval === "all") return baseMax;
 		if (currentInterval === "hour") return Math.floor(baseMax / 1.25);
@@ -148,7 +148,7 @@ const HeartbeatBarComponent = ({
 					typeLabel: metadata?.[startIdx + i]?.typeLabel,
 					degradedCount: metadata?.[startIdx + i]?.degradedCount,
 					downCount: metadata?.[startIdx + i]?.downCount,
-				}))
+				})),
 			);
 			setTranslateX(0);
 		}
@@ -158,7 +158,7 @@ const HeartbeatBarComponent = ({
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			onMouseMove?.(e.clientX, e.clientY);
 		},
-		[onMouseMove]
+		[onMouseMove],
 	);
 
 	const handleMouseLeave = useCallback(() => {
@@ -179,12 +179,12 @@ const HeartbeatBarComponent = ({
 				downCount: item.downCount,
 			});
 		},
-		[onHover]
+		[onHover],
 	);
 
 	const createItemMouseEnterHandler = useCallback(
 		(item: (typeof displayItems)[0]) => () => handleItemMouseEnter(item),
-		[handleItemMouseEnter]
+		[handleItemMouseEnter],
 	);
 
 	const calculateNodeWidth = () => {
@@ -307,7 +307,7 @@ export const HeartbeatBar = memo(
 			prevProps.metadata === nextProps.metadata &&
 			prevProps.interval === nextProps.interval
 		);
-	}
+	},
 );
 
 HeartbeatBar.displayName = "HeartbeatBar";

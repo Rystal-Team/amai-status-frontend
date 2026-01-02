@@ -38,7 +38,7 @@ export function UpdateIntervalSelector({
 			localStorage.setItem(STORAGE_KEY_UPDATE_INTERVAL, String(newInterval));
 			onIntervalChange?.(newInterval);
 		},
-		[onIntervalChange]
+		[onIntervalChange],
 	);
 
 	if (!mounted) return null;

@@ -47,12 +47,12 @@ export function Selector({
 			onChange(selectedValue);
 			setIsOpen(false);
 		},
-		[onChange]
+		[onChange],
 	);
 
 	const createSelectHandler = useCallback(
 		(selectedValue: string | number) => () => handleSelect(selectedValue),
-		[handleSelect]
+		[handleSelect],
 	);
 
 	const handleToggle = useCallback(() => {

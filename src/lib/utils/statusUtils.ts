@@ -24,7 +24,7 @@ export function getStatusLabel(status: string): string {
  */
 export function calculateOverallStatus(
 	monitors: Monitor[],
-	degradedThreshold: number
+	degradedThreshold: number,
 ): OverallStatus {
 	if (monitors.length === 0) return "up";
 
@@ -42,7 +42,7 @@ export function calculateOverallStatus(
 		}
 
 		const degradedCount = monitor.history.filter(
-			(r) => r.response_time && r.response_time * 1000 > degradedThreshold
+			(r) => r.response_time && r.response_time * 1000 > degradedThreshold,
 		).length;
 
 		if (degradedCount > 0) {
@@ -78,7 +78,7 @@ export function getUptimePercentage(monitor: Monitor): string {
  */
 export function getHeartbeatData(
 	monitor: Monitor,
-	degradedThreshold: number = DEFAULT_DEGRADED_THRESHOLD
+	degradedThreshold: number = DEFAULT_DEGRADED_THRESHOLD,
 ): Array<"up" | "degraded" | "down" | "none"> {
 	if (!monitor.history) return [];
 
@@ -117,7 +117,7 @@ export function getHeartbeatResponseTimes(monitor: Monitor): (number | null)[] {
  * @returns Formatted response time string with 'ms' unit\
  */
 export function formatResponseTime(
-	responseTime: number | null | undefined
+	responseTime: number | null | undefined,
 ): string {
 	if (responseTime === null || responseTime === undefined) return "-";
 	return `${Math.round(responseTime)}ms`;

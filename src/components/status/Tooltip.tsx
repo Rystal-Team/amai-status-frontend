@@ -48,7 +48,7 @@ export const Tooltip = memo(function Tooltip({
 							minute: "2-digit",
 							second: "2-digit",
 							timeZoneName: "short",
-						}
+						},
 					)}
 			</div>
 
