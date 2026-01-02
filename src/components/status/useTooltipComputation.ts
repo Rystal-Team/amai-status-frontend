@@ -19,7 +19,7 @@ interface TooltipData {
  */
 export function useTooltipComputation(
 	language: Language,
-	getStatusLabel: (status: "up" | "degraded" | "down" | "none") => string
+	getStatusLabel: (status: "up" | "degraded" | "down" | "none") => string,
 ) {
 	const computeTooltipData = useCallback(
 		(hoveredMonitor: HoveredMonitorInfo | null): TooltipData | null => {
@@ -64,7 +64,7 @@ export function useTooltipComputation(
 				showSampleCount: (hoveredMonitor.count || 0) > 1,
 			};
 		},
-		[language, getStatusLabel]
+		[language, getStatusLabel],
 	);
 
 	return { computeTooltipData };
