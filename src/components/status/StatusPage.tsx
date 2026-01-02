@@ -139,7 +139,7 @@ export function StatusPage() {
 		completedTasks: 0,
 	});
 
-	const updateProgressByTaskCompletion = (increment: number = 1) => {
+	const updateProgressByTaskCompletion = (increment = 1) => {
 		const tracker = progressTrackerRef.current;
 		tracker.completedTasks += increment;
 		if (tracker.totalTasks > 0) {
