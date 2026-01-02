@@ -337,51 +337,37 @@
 .heartbeatDay.up {
 	background-color: var(--success);
 	height: 35px;
-	box-shadow:
-		0 0 4px rgba(0, 255, 136, 0.4),
-		0 0 16px rgba(0, 255, 136, 0.2);
+	box-shadow: 0 0 4px rgba(0, 255, 136, 0.4), 0 0 16px rgba(0, 255, 136, 0.2);
 }
 
 .heartbeatDay.up:hover {
-	box-shadow:
-		0 0 12px rgba(0, 255, 136, 0.6),
-		0 0 24px rgba(0, 255, 136, 0.3);
+	box-shadow: 0 0 12px rgba(0, 255, 136, 0.6), 0 0 24px rgba(0, 255, 136, 0.3);
 }
 
 .heartbeatDay.degraded {
 	background-color: var(--warning);
 	height: 25px;
-	box-shadow:
-		0 0 4px rgba(255, 170, 0, 0.4),
-		0 0 16px rgba(255, 170, 0, 0.2);
+	box-shadow: 0 0 4px rgba(255, 170, 0, 0.4), 0 0 16px rgba(255, 170, 0, 0.2);
 }
 
 .heartbeatDay.degraded:hover {
-	box-shadow:
-		0 0 12px rgba(255, 170, 0, 0.6),
-		0 0 24px rgba(255, 170, 0, 0.3);
+	box-shadow: 0 0 12px rgba(255, 170, 0, 0.6), 0 0 24px rgba(255, 170, 0, 0.3);
 }
 
 .heartbeatDay.down {
 	background-color: var(--error);
 	height: 15px;
-	box-shadow:
-		0 0 4px rgba(255, 68, 102, 0.4),
-		0 0 16px rgba(255, 68, 102, 0.2);
+	box-shadow: 0 0 4px rgba(255, 68, 102, 0.4), 0 0 16px rgba(255, 68, 102, 0.2);
 }
 
 .heartbeatDay.down:hover {
-	box-shadow:
-		0 0 12px rgba(255, 68, 102, 0.6),
-		0 0 24px rgba(255, 68, 102, 0.3);
+	box-shadow: 0 0 12px rgba(255, 68, 102, 0.6), 0 0 24px rgba(255, 68, 102, 0.3);
 }
 
 .heartbeatDay.none {
 	background-color: var(--none);
 	height: 35px;
-	box-shadow:
-		0 0 4px rgba(255, 255, 255, 0.4),
-		0 0 16px rgba(255, 255, 255, 0.2);
+	box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 16px rgba(255, 255, 255, 0.2);
 }
 
 .uptimeText {
@@ -434,9 +420,7 @@
 .tooltipCount {
 	color: var(--subtext);
 	font-size: 0.75rem;
-	margin-top: 0.35rem;
-	padding-top: 0.35rem;
-	border-top: 1px solid var(--glass-border);
+	margin-top: 0.2rem;
 	font-weight: 500;
 }
 
