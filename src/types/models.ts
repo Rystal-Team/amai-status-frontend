@@ -1,5 +1,3 @@
-
-
 export interface StatusRecord {
 	timestamp: string;
 	is_up: boolean;

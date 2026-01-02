@@ -7,8 +7,6 @@ import type {
 } from "@/types/api";
 import type { Monitor } from "@/types/models";
 
-
-
 const apiClient = axios.create({
 	baseURL: API_BASE_URL,
 	timeout: API_TIMEOUT,
@@ -20,18 +18,15 @@ export interface ApiStatusResponse {
 }
 
 export const apiService = {
-
 	async getConfig(): Promise<ConfigResponse> {
 		const response = await apiClient.get<ConfigResponse>("/api/config");
 		return response.data;
 	},
 
-
 	async getVersions(): Promise<VersionResponse> {
 		const response = await apiClient.get<VersionResponse>("/api/versions");
 		return response.data;
 	},
-
 
 	async getStatus(params?: Record<string, unknown>): Promise<ApiStatusResponse> {
 		const response = await apiClient.get<ApiStatusResponse>("/api/status", {
@@ -40,10 +35,9 @@ export const apiService = {
 		return response.data;
 	},
 
-
 	async getHeartbeat(
 		monitorName: string,
-		hoursNeeded: number
+		hoursNeeded: number,
 	): Promise<AggregatedHeartbeatResponse> {
 		const response = await apiClient.get<AggregatedHeartbeatResponse>(
 			"/api/heartbeat",
@@ -52,11 +46,10 @@ export const apiService = {
 					monitor_name: monitorName,
 					hours: hoursNeeded,
 				},
-			}
+			},
 		);
 		return response.data;
 	},
-
 
 	getBaseUrl(): string {
 		return API_BASE_URL;

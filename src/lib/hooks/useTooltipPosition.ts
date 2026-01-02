@@ -11,7 +11,6 @@ interface UseTooltipPositionProps {
 	y: number;
 }
 
-
 export function useTooltipPosition({
 	x,
 	y,
