@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import styles from "@/styles/theme.module.css";
 import { StatusIcon, HeartbeatBar } from "./StatusComponents";
 import { LanguageSelector } from "../selectors/LanguageSelector";
@@ -108,6 +108,23 @@ export function StatusPage() {
 	const apiBase =
 		process.env.NEXT_PUBLIC_SERVER_ADDRESS || "http://localhost:8000";
 
+	const progressTrackerRef = useRef({
+		totalTasks: 0,
+		completedTasks: 0,
+	});
+
+	const updateProgressByTaskCompletion = (increment: number = 1) => {
+		const tracker = progressTrackerRef.current;
+		tracker.completedTasks += increment;
+		if (tracker.totalTasks > 0) {
+			const baseProgress = 20;
+			const preloadRange = 80;
+			const progressPercentage =
+				(tracker.completedTasks / tracker.totalTasks) * preloadRange;
+			setLoadingProgress(baseProgress + progressPercentage);
+		}
+	};
+
 	useEffect(() => {
 		const savedLanguage = getCookie("language") as Language | null;
 		const detected = savedLanguage || detectBrowserLanguage();
@@ -214,11 +231,8 @@ export function StatusPage() {
 			if (hasDown) setOverallStatus("down");
 			else if (hasDegraded) setOverallStatus("degraded");
 			else setOverallStatus("up");
-
-			setLoadingProgress(100);
 		} catch (error) {
 			console.error("Failed to fetch status:", error);
-			setLoadingProgress(100);
 		} finally {
 			setLoading(false);
 		}
@@ -259,16 +273,108 @@ export function StatusPage() {
 		}
 	};
 
+	const preloadAllIntervals = async (monitorsToPreload: Monitor[]) => {
+		const intervals: Array<"all" | "hour" | "day" | "week"> = [
+			"all",
+			"hour",
+			"day",
+			"week",
+		];
+		const totalRequests = monitorsToPreload.length * intervals.length;
+
+		progressTrackerRef.current.totalTasks = totalRequests;
+		progressTrackerRef.current.completedTasks = 0;
+
+		try {
+			const preloadPromises: Promise<void>[] = [];
+
+			for (const monitor of monitorsToPreload) {
+				for (const interval of intervals) {
+					const promise = (async () => {
+						try {
+							let hoursNeeded = 720;
+							if (interval === "hour") {
+								hoursNeeded = 96;
+							} else if (interval === "day") {
+								hoursNeeded = 120 * 24;
+							} else if (interval === "week") {
+								hoursNeeded = 104 * 7 * 24;
+							} else if (interval === "all") {
+								hoursNeeded = 30 * 24;
+							}
+
+							const response = await axios.get<AggregatedHeartbeatResponse>(
+								`${apiBase}/api/heartbeat`,
+								{
+									params: {
+										monitor_name: monitor.name,
+										interval,
+										hours: hoursNeeded,
+									},
+								}
+							);
+							const key = `${monitor.name}:${interval}`;
+							setAggregatedHeartbeat((prev) => ({
+								...prev,
+								[key]: response.data.heartbeat,
+							}));
+						} catch (error) {
+							console.error(`Failed to preload ${monitor.name}:${interval}:`, error);
+						} finally {
+							updateProgressByTaskCompletion();
+						}
+					})();
+
+					preloadPromises.push(promise);
+				}
+			}
+
+			await Promise.all(preloadPromises);
+		} catch (error) {
+			console.error("Preload error:", error);
+		}
+	};
+
 	useEffect(() => {
 		const initializeApp = async () => {
 			setLoadingProgress(0);
 
 			try {
-				await axios.get(`${apiBase}/api/status`, { timeout: 5000 });
+				await axios.get(`${apiBase}/api/status`, { timeout: 15000 });
 				setBackendUnreachable(false);
 
 				fetchConfig();
-				fetchStatus();
+				setLoadingProgress(20);
+
+				const statusResponse = await axios.get<ApiResponse>(
+					`${apiBase}/api/status`,
+					{
+						params: { hours: 24 },
+					}
+				);
+				const fetchedMonitors = statusResponse.data.monitors;
+				setMonitors(fetchedMonitors);
+				setLastUpdated(new Date());
+
+				const hasDown = fetchedMonitors.some((m) => !m.current_status.is_up);
+				const hasDegraded = fetchedMonitors.some((m) =>
+					m.history.some(
+						(r) => r.response_time && r.response_time * 1000 > degradedThreshold
+					)
+				);
+
+				if (hasDown) setOverallStatus("down");
+				else if (hasDegraded) setOverallStatus("degraded");
+				else setOverallStatus("up");
+
+				if (fetchedMonitors.length > 0) {
+					await preloadAllIntervals(fetchedMonitors);
+					setLoadingProgress(100);
+				} else {
+					setLoadingProgress(100);
+				}
+
+				setLoading(false);
 			} catch (error) {
 				console.error("Backend unreachable:", error);
 				setBackendUnreachable(true);
@@ -279,6 +385,9 @@ export function StatusPage() {
 		};
 
 		initializeApp();
+	}, []);
+
+	useEffect(() => {
 		setNextUpdate(updateInterval);
 
 		const updateIntervalId = setInterval(() => {
