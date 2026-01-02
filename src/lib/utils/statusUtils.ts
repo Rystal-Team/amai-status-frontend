@@ -1,9 +1,4 @@
-import type {
-	Monitor,
-	StatusRecord,
-	OverallStatus,
-	HeartbeatInterval,
-} from "@/types/models";
+import type { Monitor, OverallStatus } from "@/types/models";
 import { DEFAULT_DEGRADED_THRESHOLD } from "@/lib/constants";
 
 export function getStatusLabel(status: string): string {
