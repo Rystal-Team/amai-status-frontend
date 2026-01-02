@@ -37,7 +37,7 @@ export function Selector({
 			onChange(selectedValue);
 			setIsOpen(false);
 		},
-		[onChange]
+		[onChange],
 	);
 
 	const handleToggle = useCallback(() => {
