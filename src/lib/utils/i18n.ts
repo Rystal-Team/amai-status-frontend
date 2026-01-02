@@ -43,12 +43,6 @@ export function detectBrowserLanguage(): Language {
 }
 
 export function getLanguageName(lang: Language): string {
-	const names: Record<Language, string> = {
-		en: "English",
-		ja: "日本語",
-		ko: "한국어",
-		"zh-TW": "繁體中文",
-		"zh-CN": "简体中文",
-	};
-	return names[lang];
+	const name = translations[lang]["name"];
+	return typeof name === "string" ? name : lang;
 }

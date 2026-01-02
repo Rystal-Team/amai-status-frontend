@@ -75,6 +75,10 @@ interface HeartbeatItem {
 	downCount?: number;
 }
 
+/**
+ * Main status page component that displays monitor status and heartbeat data.
+ * Handles API calls, state management, and real-time updates.
+ */
 export function StatusPage() {
 	const [monitors, setMonitors] = useState<Monitor[]>([]);
 	const [loadingProgress, setLoadingProgress] = useState(0);
@@ -246,6 +250,9 @@ export function StatusPage() {
 	}, []);
 
 	useEffect(() => {
+		/**
+		 * Calculates the number of heartbeat items to display based on viewport width.
+		 */
 		const calculateHeartbeatItems = () => {
 			const viewportWidth = window.innerWidth;
 			const containerWidth = Math.min(viewportWidth * 0.175, 800);
@@ -259,6 +266,10 @@ export function StatusPage() {
 		return () => window.removeEventListener("resize", calculateHeartbeatItems);
 	}, []);
 
+	/**
+	 * Fetches configuration and version information from the API.
+	 * Updates degraded thresholds and version states.
+	 */
 	const fetchConfig = async () => {
 		try {
 			const response = await axios.get<ConfigResponse>(`${apiBase}/api/config`);
@@ -322,6 +333,11 @@ export function StatusPage() {
 		}
 	};
 
+	/**
+	 * Fetches aggregated heartbeat data for a monitor and interval.
+	 * @param monitorName - Name of the monitor
+	 * @param hoursNeeded - Number of hours of history to fetch
+	 */
 	const fetchAggregatedHeartbeat = async (
 		monitorName: string,
 		interval: "all" | "hour" | "day" | "week",
@@ -357,6 +373,11 @@ export function StatusPage() {
 		}
 	};
 
+	/**
+	 * Preloads heartbeat data for all intervals of multiple monitors.
+	 * Updates progress tracker as requests complete.
+	 * @param monitorsToPreload - Monitors to preload data for
+	 */
 	const preloadAllIntervals = async (monitorsToPreload: Monitor[]) => {
 		const intervals: Array<"all" | "hour" | "day" | "week"> = [
 			"all",
@@ -420,6 +441,9 @@ export function StatusPage() {
 	};
 
 	useEffect(() => {
+		/**
+		 * Initializes the application by fetching config, status, and preloading data.
+		 */
 		const initializeApp = async () => {
 			setLoadingProgress(0);
 
@@ -635,6 +659,10 @@ export function StatusPage() {
 			const localeMap =
 				language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US";
 
+			/**
+			 * Gets the timezone abbreviation for the current locale.
+			 * @returns Timezone abbreviation string (e.g., 'UTC', 'JST')
+			 */
 			const getTimezoneAbbr = () => {
 				const tzString = new Date().toLocaleString(localeMap, {
 					timeZoneName: "short",

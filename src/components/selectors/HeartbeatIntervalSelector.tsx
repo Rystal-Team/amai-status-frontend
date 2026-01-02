@@ -23,6 +23,10 @@ export function HeartbeatIntervalSelector({
 
 	const intervals: Interval[] = ["all", "hour", "day", "week"];
 
+	/**
+	 * Handles heartbeat interval selection.
+	 * @param interval - The selected time interval
+	 */
 	const handleSelectInterval = useCallback(
 		(interval: Interval) => {
 			setSelectedInterval(interval);
@@ -36,6 +40,9 @@ export function HeartbeatIntervalSelector({
 		[handleSelectInterval],
 	);
 
+	/**
+	 * Navigates to the previous heartbeat interval.
+	 */
 	const handlePrevious = useCallback(() => {
 		const currentIndex = intervals.indexOf(selectedInterval);
 		const newIndex = (currentIndex - 1 + intervals.length) % intervals.length;
@@ -43,6 +50,9 @@ export function HeartbeatIntervalSelector({
 		handleSelectInterval(newInterval);
 	}, [selectedInterval, handleSelectInterval]);
 
+	/**
+	 * Navigates to the next heartbeat interval.
+	 */
 	const handleNext = useCallback(() => {
 		const currentIndex = intervals.indexOf(selectedInterval);
 		const newIndex = (currentIndex + 1) % intervals.length;

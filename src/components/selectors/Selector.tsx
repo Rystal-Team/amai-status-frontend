@@ -42,6 +42,10 @@ export function Selector({
 
 	const currentOption = options.find((opt) => opt.value === value);
 
+	/**
+	 * Handles option selection and dropdown toggle.
+	 * @param selectedValue - The value selected from the dropdown
+	 */
 	const handleSelect = useCallback(
 		(selectedValue: string | number) => {
 			onChange(selectedValue);

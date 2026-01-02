@@ -82,6 +82,13 @@ const HeartbeatBarComponent = ({
 	maxItems = 90,
 	interval = "all",
 }: HeartbeatBarProps) => {
+	/**
+	 * Calculates the effective maximum items to display based on interval.
+	 * Adjusts the count to ensure visibility for different time ranges.
+	 * @param baseMax - Base maximum number of items
+	 * @param currentInterval - Current heartbeat interval
+	 * @returns Adjusted maximum items count
+	 */
 	const getEffectiveMaxItems = (
 		baseMax: number,
 		currentInterval: string,
@@ -154,6 +161,10 @@ const HeartbeatBarComponent = ({
 		}
 	}, [data, timestamps, responseTimes, metadata, effectiveMaxItems]);
 
+	/**
+	 * Handles mouse move events on the heartbeat bar.
+	 * Updates tooltip position and triggers hover callback.
+	 */
 	const handleMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			onMouseMove?.(e.clientX, e.clientY);
@@ -161,6 +172,10 @@ const HeartbeatBarComponent = ({
 		[onMouseMove],
 	);
 
+	/**
+	 * Handles mouse leave events on the heartbeat bar.
+	 * Hides tooltip and clears hover state.
+	 */
 	const handleMouseLeave = useCallback(() => {
 		onHover?.(null);
 		onMouseLeave?.();
@@ -187,6 +202,10 @@ const HeartbeatBarComponent = ({
 		[handleItemMouseEnter],
 	);
 
+	/**
+	 * Calculates the width of a single heartbeat node element.
+	 * Used for animation calculations.
+	 */
 	const calculateNodeWidth = () => {
 		if (firstNodeRef.current) {
 			const width = firstNodeRef.current.offsetWidth;
