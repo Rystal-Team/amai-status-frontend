@@ -84,7 +84,7 @@ export function StatusPage() {
 	const [nextUpdate, setNextUpdate] = useState<number>(15);
 	const [updateInterval, setUpdateInterval] = useState<number>(15);
 	const [overallStatus, setOverallStatus] = useState<"up" | "degraded" | "down">(
-		"up"
+		"up",
 	);
 	const [language, setLanguage] = useState<Language>("en");
 	const [mounted, setMounted] = useState(false);
@@ -202,13 +202,13 @@ export function StatusPage() {
 				[monitor.name]: interval,
 			}));
 		},
-		[]
+		[],
 	);
 
 	const createHeartbeatIntervalChangeHandler = useCallback(
 		(monitor: Monitor) => (interval: "all" | "hour" | "day" | "week") =>
 			handleHeartbeatIntervalChange(monitor, interval),
-		[handleHeartbeatIntervalChange]
+		[handleHeartbeatIntervalChange],
 	);
 
 	useEffect(() => {
@@ -279,8 +279,8 @@ export function StatusPage() {
 			const hasDown = response.data.monitors.some((m) => !m.current_status.is_up);
 			const hasDegraded = response.data.monitors.some((m) =>
 				m.history.some(
-					(r) => r.response_time && r.response_time * 1000 > degradedThreshold
-				)
+					(r) => r.response_time && r.response_time * 1000 > degradedThreshold,
+				),
 			);
 
 			if (hasDown) setOverallStatus("down");
@@ -293,7 +293,7 @@ export function StatusPage() {
 
 	const fetchAggregatedHeartbeat = async (
 		monitorName: string,
-		interval: "all" | "hour" | "day" | "week"
+		interval: "all" | "hour" | "day" | "week",
 	) => {
 		try {
 			let hoursNeeded = 720;
@@ -311,7 +311,7 @@ export function StatusPage() {
 				`${apiBase}/api/heartbeat`,
 				{
 					params: { monitor_name: monitorName, interval, hours: hoursNeeded },
-				}
+				},
 			);
 			const key = `${monitorName}:${interval}`;
 			setAggregatedHeartbeat((prev) => ({
@@ -321,7 +321,7 @@ export function StatusPage() {
 		} catch (error) {
 			console.error(
 				`Failed to fetch aggregated heartbeat for ${monitorName}:`,
-				error
+				error,
 			);
 		}
 	};
@@ -364,7 +364,7 @@ export function StatusPage() {
 										interval,
 										hours: hoursNeeded,
 									},
-								}
+								},
 							);
 							const key = `${monitor.name}:${interval}`;
 							setAggregatedHeartbeat((prev) => ({
@@ -403,7 +403,7 @@ export function StatusPage() {
 					`${apiBase}/api/status`,
 					{
 						params: { hours: 24 },
-					}
+					},
 				);
 				const fetchedMonitors = statusResponse.data.monitors;
 				setMonitors(fetchedMonitors);
@@ -412,8 +412,8 @@ export function StatusPage() {
 				const hasDown = fetchedMonitors.some((m) => !m.current_status.is_up);
 				const hasDegraded = fetchedMonitors.some((m) =>
 					m.history.some(
-						(r) => r.response_time && r.response_time * 1000 > degradedThreshold
-					)
+						(r) => r.response_time && r.response_time * 1000 > degradedThreshold,
+					),
 				);
 
 				if (hasDown) setOverallStatus("down");
@@ -464,7 +464,7 @@ export function StatusPage() {
 	}, [heartbeatIntervals, monitors]);
 
 	const getStatusIndicatorText = (
-		monitor: Monitor
+		monitor: Monitor,
 	): { text: string; status: "up" | "degraded" | "down" } => {
 		if (!monitor.current_status.is_up) {
 			return { text: t(language, "status_indicator.down"), status: "down" };
@@ -535,7 +535,7 @@ export function StatusPage() {
 			heartbeatItemCount,
 			degradedThreshold,
 			degradedPercentageThreshold,
-		]
+		],
 	);
 
 	const getHeartbeatTimestamps = useCallback(
@@ -552,7 +552,7 @@ export function StatusPage() {
 
 			return nodes.map((node) => new Date(node.timestamp));
 		},
-		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount]
+		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount],
 	);
 
 	const getHeartbeatResponseTimes = useCallback(
@@ -569,12 +569,12 @@ export function StatusPage() {
 
 			return nodes.map((node) => node.avg_response_time);
 		},
-		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount]
+		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount],
 	);
 
 	const getHeartbeatMetadata = useMemo(() => {
 		return (
-			monitor: Monitor
+			monitor: Monitor,
 		): Array<{
 			count: number;
 			avgResponseTime: number | null;
@@ -667,7 +667,7 @@ export function StatusPage() {
 	}, [heartbeatIntervals, aggregatedHeartbeat, language, heartbeatItemCount]);
 
 	const getStatusLabel = (
-		status: "up" | "degraded" | "down" | "none"
+		status: "up" | "degraded" | "down" | "none",
 	): string => {
 		if (status === "none") {
 			return "No Data";
@@ -699,8 +699,8 @@ export function StatusPage() {
 					{overallStatus === "up"
 						? t(language, "status.up")
 						: overallStatus === "degraded"
-						? t(language, "status.degraded")
-						: t(language, "status.down")}
+							? t(language, "status.degraded")
+							: t(language, "status.down")}
 				</p>
 			</div>
 
@@ -776,7 +776,7 @@ export function StatusPage() {
 										minute: "2-digit",
 										second: "2-digit",
 										timeZoneName: "short",
-									}
+									},
 								)}
 						</div>
 						<div
@@ -848,7 +848,7 @@ export function StatusPage() {
 								minute: "2-digit",
 								second: "2-digit",
 								timeZoneName: "short",
-							}
+							},
 						)}{" "}
 						・ {t(language, "footer.next_update")} {nextUpdate}
 						{t(language, "footer.seconds")}
