@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import styles from "@/styles/theme.module.css";
 import { Language, t } from "@/lib/utils/i18n";
 
@@ -19,24 +19,27 @@ export function HeartbeatIntervalSelector({
 
 	const intervals: Interval[] = ["all", "hour", "day", "week"];
 
-	const handleSelectInterval = (interval: Interval) => {
-		setSelectedInterval(interval);
-		onIntervalChange(interval);
-	};
+	const handleSelectInterval = useCallback(
+		(interval: Interval) => {
+			setSelectedInterval(interval);
+			onIntervalChange(interval);
+		},
+		[onIntervalChange]
+	);
 
-	const handlePrevious = () => {
+	const handlePrevious = useCallback(() => {
 		const currentIndex = intervals.indexOf(selectedInterval);
 		const newIndex = (currentIndex - 1 + intervals.length) % intervals.length;
 		const newInterval = intervals[newIndex];
 		handleSelectInterval(newInterval);
-	};
+	}, [selectedInterval, handleSelectInterval]);
 
-	const handleNext = () => {
+	const handleNext = useCallback(() => {
 		const currentIndex = intervals.indexOf(selectedInterval);
 		const newIndex = (currentIndex + 1) % intervals.length;
 		const newInterval = intervals[newIndex];
 		handleSelectInterval(newInterval);
-	};
+	}, [selectedInterval, handleSelectInterval]);
 
 	return (
 		<div className={styles.heartbeatSelector}>

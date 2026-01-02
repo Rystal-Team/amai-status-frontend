@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, memo, useCallback } from "react";
 import styles from "@/styles/theme.module.css";
 
 interface StatusIndicatorProps {
@@ -149,14 +149,33 @@ const HeartbeatBarComponent = ({
 		}
 	}, [data, timestamps, responseTimes, metadata, effectiveMaxItems]);
 
-	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-		onMouseMove?.(e.clientX, e.clientY);
-	};
+	const handleMouseMove = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			onMouseMove?.(e.clientX, e.clientY);
+		},
+		[onMouseMove]
+	);
 
-	const handleMouseLeave = () => {
+	const handleMouseLeave = useCallback(() => {
 		onHover?.(null);
 		onMouseLeave?.();
-	};
+	}, [onHover, onMouseLeave]);
+
+	const handleItemMouseEnter = useCallback(
+		(item: (typeof displayItems)[0]) => {
+			onHover?.({
+				timestamp: item.timestamp,
+				status: item.status,
+				responseTime: item.responseTime,
+				count: item.count,
+				avgResponseTime: item.avgResponseTime,
+				typeLabel: item.typeLabel,
+				degradedCount: item.degradedCount,
+				downCount: item.downCount,
+			});
+		},
+		[onHover]
+	);
 
 	const calculateNodeWidth = () => {
 		if (firstNodeRef.current) {
@@ -254,18 +273,7 @@ const HeartbeatBarComponent = ({
 						<div
 							key={item.id}
 							className={`${styles.heartbeatDay} ${styles[item.status]}`}
-							onMouseEnter={() => {
-								onHover?.({
-									timestamp: item.timestamp,
-									status: item.status,
-									responseTime: item.responseTime,
-									count: item.count,
-									avgResponseTime: item.avgResponseTime,
-									typeLabel: item.typeLabel,
-									degradedCount: item.degradedCount,
-									downCount: item.downCount,
-								});
-							}}
+							onMouseEnter={() => handleItemMouseEnter(item)}
 						/>
 					))}
 				</div>

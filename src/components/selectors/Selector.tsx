@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import styles from "@/styles/theme.module.css";
 
 export interface SelectorOption {
@@ -32,10 +32,17 @@ export function Selector({
 
 	const currentOption = options.find((opt) => opt.value === value);
 
-	const handleSelect = (selectedValue: string | number) => {
-		onChange(selectedValue);
-		setIsOpen(false);
-	};
+	const handleSelect = useCallback(
+		(selectedValue: string | number) => {
+			onChange(selectedValue);
+			setIsOpen(false);
+		},
+		[onChange]
+	);
+
+	const handleToggle = useCallback(() => {
+		setIsOpen(!isOpen);
+	}, [isOpen]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -63,7 +70,7 @@ export function Selector({
 		>
 			<button
 				className={`${styles.selectorButton} ${isOpen ? styles.active : ""}`}
-				onClick={() => setIsOpen(!isOpen)}
+				onClick={handleToggle}
 				aria-label={ariaLabel}
 			>
 				{icon && <span className="material-symbols-outlined">{icon}</span>}

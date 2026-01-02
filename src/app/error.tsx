@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { t, type Language, detectBrowserLanguage } from "@/lib/utils/i18n";
 import { getCookie } from "@/lib/utils/cookies";
 import styles from "@/styles/theme.module.css";
@@ -23,6 +23,10 @@ export default function Error({
 
 	if (!mounted) return null;
 
+	const handleReset = useCallback(() => {
+		reset();
+	}, [reset]);
+
 	return (
 		<div
 			className={styles.container}
@@ -42,7 +46,7 @@ export default function Error({
 				</pre>
 			)}
 			<button
-				onClick={() => reset()}
+				onClick={handleReset}
 				style={{
 					marginTop: "2rem",
 					padding: "0.75rem 1.5rem",

@@ -151,6 +151,50 @@ export function StatusPage() {
 		}
 	};
 
+	const handleHeartbeatHover = useCallback((item: any) => {
+		if (item !== null) {
+			setHoveredMonitorIndex({
+				timestamp: item.timestamp,
+				status: item.status,
+				responseTime: item.responseTime,
+				count: item.count,
+				avgResponseTime: item.avgResponseTime,
+				typeLabel: item.typeLabel,
+				degradedCount: item.degradedCount,
+				downCount: item.downCount,
+				interval: item.interval,
+			});
+		} else {
+			setHoveredMonitorIndex(null);
+		}
+	}, []);
+
+	const handleTooltipMouseMove = useCallback((x: number, y: number) => {
+		setTooltipPos({ x, y });
+	}, []);
+
+	const handleTooltipMouseLeave = useCallback(() => {
+		setHoveredMonitorIndex(null);
+	}, []);
+
+	const handleLoadingFadeComplete = useCallback(() => {
+		setShowLoadingScreen(false);
+	}, []);
+
+	const handleUpdateIntervalChange = useCallback((interval: number) => {
+		setUpdateInterval(interval);
+	}, []);
+
+	const handleHeartbeatIntervalChange = useCallback(
+		(monitor: Monitor, interval: "all" | "hour" | "day" | "week") => {
+			setHeartbeatIntervals((prev) => ({
+				...prev,
+				[monitor.name]: interval,
+			}));
+		},
+		[]
+	);
+
 	useEffect(() => {
 		const savedLanguage = getCookie("language") as Language | null;
 		const detected = savedLanguage || detectBrowserLanguage();
@@ -667,12 +711,9 @@ export function StatusPage() {
 									<div className={styles.statusHeaderRight}>
 										<HeartbeatIntervalSelector
 											language={language}
-											onIntervalChange={(interval) => {
-												setHeartbeatIntervals((prev) => ({
-													...prev,
-													[monitor.name]: interval,
-												}));
-											}}
+											onIntervalChange={(interval) =>
+												handleHeartbeatIntervalChange(monitor, interval)
+											}
 										/>
 										<div className={styles.statusIndicator}>
 											<p>{text}</p>
@@ -688,25 +729,9 @@ export function StatusPage() {
 										metadata={metadata}
 										maxItems={heartbeatItemCount}
 										interval={interval}
-										onHover={(item) => {
-											if (item !== null) {
-												setHoveredMonitorIndex({
-													timestamp: item.timestamp,
-													status: item.status,
-													responseTime: item.responseTime,
-													count: item.count,
-													avgResponseTime: item.avgResponseTime,
-													typeLabel: item.typeLabel,
-													degradedCount: item.degradedCount,
-													downCount: item.downCount,
-													interval: interval,
-												});
-											} else {
-												setHoveredMonitorIndex(null);
-											}
-										}}
-										onMouseMove={(x, y) => setTooltipPos({ x, y })}
-										onMouseLeave={() => setHoveredMonitorIndex(null)}
+										onHover={handleHeartbeatHover}
+										onMouseMove={handleTooltipMouseMove}
+										onMouseLeave={handleTooltipMouseLeave}
 									/>
 									<div className={styles.uptimeText}>
 										{t(language, "uptime")} {uptime}%
@@ -815,11 +840,7 @@ export function StatusPage() {
 						・ {t(language, "footer.next_update")} {nextUpdate}
 						{t(language, "footer.seconds")}
 					</p>
-					<UpdateIntervalSelector
-						onIntervalChange={(interval) => {
-							setUpdateInterval(interval);
-						}}
-					/>
+					<UpdateIntervalSelector onIntervalChange={handleUpdateIntervalChange} />
 				</div>
 			)}
 
@@ -868,7 +889,7 @@ export function StatusPage() {
 							apiBase={apiBase}
 							language={language}
 							progress={loadingProgress}
-							onFadeComplete={() => setShowLoadingScreen(false)}
+							onFadeComplete={handleLoadingFadeComplete}
 						/>
 					)}
 					{mainContent}
