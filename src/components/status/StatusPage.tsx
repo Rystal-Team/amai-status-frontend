@@ -752,18 +752,18 @@ export function StatusPage() {
 					>
 						<div className={styles.tooltipTime}>
 							{hoveredMonitorIndex.typeLabel ||
-								(hoveredMonitorIndex.timestamp?.toLocaleString(
-										language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US",
-										{
-											year: "numeric",
-											month: "2-digit",
-											day: "2-digit",
-											hour: "2-digit",
-											minute: "2-digit",
-											second: "2-digit",
-											timeZoneName: "short",
-										},
-									))}
+								hoveredMonitorIndex.timestamp?.toLocaleString(
+									language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US",
+									{
+										year: "numeric",
+										month: "2-digit",
+										day: "2-digit",
+										hour: "2-digit",
+										minute: "2-digit",
+										second: "2-digit",
+										timeZoneName: "short",
+									},
+								)}
 						</div>
 						<div
 							className={`${styles.tooltipStatus} ${
