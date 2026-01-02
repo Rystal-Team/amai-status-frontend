@@ -35,7 +35,7 @@ interface StatusItemProps {
 			degradedCount?: number;
 			downCount?: number;
 			interval?: "all" | "hour" | "day" | "week";
-		} | null
+		} | null,
 	) => void;
 	onTooltipMouseMove: (x: number, y: number) => void;
 	onTooltipMouseLeave: () => void;
