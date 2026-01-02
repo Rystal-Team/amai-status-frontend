@@ -58,7 +58,9 @@ interface ConfigResponse {
 	configuration: {
 		degraded_threshold: number;
 		footerText: string;
-		[key: string]: any;
+		siteTitle?: string;
+		degraded_percentage_threshold?: number;
+		[key: string]: string | number | boolean | null | undefined;
 	};
 }
 

@@ -14,10 +14,14 @@ const translations: Record<Language, Translations> = {
 
 export function t(language: Language, path: string): string {
 	const keys = path.split(".");
-	let current: any = translations[language];
+	let current: string | Translations | undefined = translations[language];
 
 	for (const key of keys) {
-		current = current?.[key];
+		if (typeof current === "object" && current !== null) {
+			current = current[key];
+		} else {
+			return path;
+		}
 		if (!current) {
 			return path;
 		}

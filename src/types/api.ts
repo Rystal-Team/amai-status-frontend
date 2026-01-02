@@ -7,13 +7,13 @@ export interface ConfigResponse {
 	configuration: {
 		degraded_threshold: number;
 		footerText: string;
-		[key: string]: any;
+		[key: string]: string | number | boolean | null;
 	};
 }
 
 export interface StatusResponse {
 	timestamp: string;
-	monitors: any[];
+	monitors: Record<string, unknown>[];
 }
 
 export interface VersionResponse {
@@ -24,5 +24,5 @@ export interface VersionResponse {
 export interface AggregatedHeartbeatResponse {
 	monitor_name: string;
 	interval: string;
-	heartbeat: any[];
+	heartbeat: Record<string, unknown>[];
 }
