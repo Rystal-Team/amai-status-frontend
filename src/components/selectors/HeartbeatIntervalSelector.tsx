@@ -24,7 +24,12 @@ export function HeartbeatIntervalSelector({
 			setSelectedInterval(interval);
 			onIntervalChange(interval);
 		},
-		[onIntervalChange],
+		[onIntervalChange]
+	);
+
+	const createIntervalSelectHandler = useCallback(
+		(interval: Interval) => () => handleSelectInterval(interval),
+		[handleSelectInterval]
 	);
 
 	const handlePrevious = useCallback(() => {
@@ -68,7 +73,7 @@ export function HeartbeatIntervalSelector({
 							className={`${styles.selectorOptionHorizontal} ${
 								selectedInterval === interval ? styles.active : ""
 							}`}
-							onClick={() => handleSelectInterval(interval)}
+							onClick={createIntervalSelectHandler(interval)}
 						>
 							{t(language, `time_range.${interval}`)}
 						</button>
