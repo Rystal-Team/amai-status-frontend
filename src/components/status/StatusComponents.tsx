@@ -58,7 +58,7 @@ interface HeartbeatBarProps {
 			typeLabel?: string;
 			degradedCount?: number;
 			downCount?: number;
-		} | null
+		} | null,
 	) => void;
 	onMouseMove?: (x: number, y: number) => void;
 	onMouseLeave?: () => void;
@@ -79,7 +79,7 @@ const HeartbeatBarComponent = ({
 }: HeartbeatBarProps) => {
 	const getEffectiveMaxItems = (
 		baseMax: number,
-		currentInterval: string
+		currentInterval: string,
 	): number => {
 		if (currentInterval === "all") return baseMax;
 		if (currentInterval === "hour") return Math.floor(baseMax / 1.25);
@@ -144,7 +144,7 @@ const HeartbeatBarComponent = ({
 					typeLabel: metadata?.[startIdx + i]?.typeLabel,
 					degradedCount: metadata?.[startIdx + i]?.degradedCount,
 					downCount: metadata?.[startIdx + i]?.downCount,
-				}))
+				})),
 			);
 			setTranslateX(0);
 		}
@@ -293,7 +293,7 @@ export const HeartbeatBar = memo(
 			prevProps.metadata === nextProps.metadata &&
 			prevProps.interval === nextProps.interval
 		);
-	}
+	},
 );
 
 HeartbeatBar.displayName = "HeartbeatBar";
