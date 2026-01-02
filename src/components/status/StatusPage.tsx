@@ -496,7 +496,7 @@ export function StatusPage() {
 			clearInterval(updateIntervalId);
 			clearInterval(countdownInterval);
 		};
-	}, [state.updateInterval, state]);
+	}, [state.updateInterval]);
 
 	useEffect(() => {
 		if (state.monitors.length === 0) return;
