@@ -51,12 +51,12 @@ export function Selector({
 			onChange(selectedValue);
 			setIsOpen(false);
 		},
-		[onChange],
+		[onChange]
 	);
 
 	const createSelectHandler = useCallback(
 		(selectedValue: string | number) => () => handleSelect(selectedValue),
-		[handleSelect],
+		[handleSelect]
 	);
 
 	const handleToggle = useCallback(() => {
@@ -64,6 +64,10 @@ export function Selector({
 	}, [isOpen]);
 
 	useEffect(() => {
+		/**
+		 * Closes the selector dropdown when clicking outside of it.
+		 * @param event - The mouse event from document
+		 */
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
 				selectorRef.current &&

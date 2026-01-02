@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import styles from "@/styles/theme.module.css";
 import { Language, t } from "@/lib/utils/i18n";
 
@@ -46,6 +47,8 @@ export function LoadingScreen({
 
 			return () => clearTimeout(fadeTimer);
 		}
+
+		return undefined;
 	}, [progress, onFadeComplete]);
 
 	return (
@@ -55,10 +58,13 @@ export function LoadingScreen({
 			}`}
 		>
 			<div className={styles.loadingContent}>
-				<img
+				<Image
 					src={`${apiBase}/logo.png`}
 					alt="logo"
+					width={80}
+					height={80}
 					className={styles.loadingLogo}
+					unoptimized
 				/>
 				<div className={styles.progressBarWrapper}>
 					<div

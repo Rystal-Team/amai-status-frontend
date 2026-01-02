@@ -36,6 +36,11 @@ export function t(language: Language, path: string): string {
 	return typeof current === "string" ? current : path;
 }
 
+/**
+ * Detects the user's browser language and maps it to a supported language.
+ * Defaults to 'en' if detection is unavailable or language is not supported.
+ * @returns The detected language code or 'en' as fallback
+ */
 export function detectBrowserLanguage(): Language {
 	if (typeof window === "undefined") return "en";
 
@@ -48,6 +53,11 @@ export function detectBrowserLanguage(): Language {
 	return "en";
 }
 
+/**
+ * Gets the localized display name for a language.
+ * @param lang - The language code to get the name for
+ * @returns The translated language name or the language code if not found
+ */
 export function getLanguageName(lang: Language): string {
 	const name = translations[lang]["name"];
 	return typeof name === "string" ? name : lang;

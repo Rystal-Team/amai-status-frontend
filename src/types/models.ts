@@ -1,5 +1,3 @@
-
-
 export interface StatusRecord {
 	timestamp: string;
 	is_up: boolean;
@@ -44,4 +42,7 @@ export interface TooltipInfo {
 	count?: number;
 	avgResponseTime?: number | null;
 	typeLabel?: string;
+	degradedCount?: number;
+	downCount?: number;
+	interval?: "all" | "hour" | "day" | "week";
 }
