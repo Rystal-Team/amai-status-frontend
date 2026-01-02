@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import styles from "@/styles/theme.module.css";
 import { StatusIcon, HeartbeatBar } from "./StatusComponents";
 import { LanguageSelector } from "../selectors/LanguageSelector";
@@ -10,6 +10,7 @@ import { LoadingScreen } from "../common/LoadingScreen";
 import { BackendUnreachable } from "../errors/BackendUnreachable";
 import { Language, t, detectBrowserLanguage } from "@/lib/utils/i18n";
 import { getCookie } from "@/lib/utils/cookies";
+import { useStatusPageState } from "@/lib/hooks/useStatusPageState";
 import axios from "axios";
 
 interface StatusRecord {
@@ -80,37 +81,7 @@ interface HeartbeatItem {
  * Handles API calls, state management, and real-time updates.
  */
 export function StatusPage() {
-	const [monitors, setMonitors] = useState<Monitor[]>([]);
-	const [loadingProgress, setLoadingProgress] = useState(0);
-	const [showLoadingScreen, setShowLoadingScreen] = useState(true);
-	const [backendUnreachable, setBackendUnreachable] = useState(false);
-	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-	const [nextUpdate, setNextUpdate] = useState<number>(15);
-	const [updateInterval, setUpdateInterval] = useState<number>(15);
-	const [overallStatus, setOverallStatus] = useState<"up" | "degraded" | "down">(
-		"up"
-	);
-	const [language, setLanguage] = useState<Language>("en");
-	const [mounted, setMounted] = useState(false);
-	const [heartbeatItemCount, setHeartbeatItemCount] = useState(90);
-	const [degradedThreshold, setDegradedThreshold] = useState(200);
-	const [degradedPercentageThreshold, setDegradedPercentageThreshold] =
-		useState(10);
-	const [footerText, setFooterText] = useState("");
-	const [apiVersion, setApiVersion] = useState("");
-	const [frontendVersion, setFrontendVersion] = useState("");
-	const [hoveredMonitorIndex, setHoveredMonitorIndex] = useState<{
-		timestamp: Date;
-		status: "up" | "degraded" | "down" | "none";
-		responseTime?: number | null;
-		count?: number;
-		avgResponseTime?: number | null;
-		typeLabel?: string;
-		degradedCount?: number;
-		downCount?: number;
-		interval?: "all" | "hour" | "day" | "week";
-	} | null>(null);
-	const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+	const state = useStatusPageState();
 
 	/**
 	 * Calculates adjusted tooltip position to keep it within viewport bounds.
@@ -122,8 +93,8 @@ export function StatusPage() {
 		const padding = 8;
 		const screenPadding = 5;
 
-		let adjustedX = tooltipPos.x + padding;
-		let adjustedY = tooltipPos.y + padding;
+		let adjustedX = state.tooltipPos.x + padding;
+		let adjustedY = state.tooltipPos.y + padding;
 
 		if (adjustedX + tooltipWidth > window.innerWidth - screenPadding) {
 			adjustedX = window.innerWidth - tooltipWidth - screenPadding;
@@ -142,13 +113,7 @@ export function StatusPage() {
 		}
 
 		return { x: adjustedX, y: adjustedY };
-	}, [tooltipPos]);
-	const [heartbeatIntervals, setHeartbeatIntervals] = useState<
-		Record<string, "all" | "hour" | "day" | "week">
-	>({});
-	const [aggregatedHeartbeat, setAggregatedHeartbeat] = useState<
-		Record<string, AggregatedHeartbeatNode[]>
-	>({});
+	}, [state.tooltipPos]);
 
 	const apiBase =
 		process.env.NEXT_PUBLIC_SERVER_ADDRESS || "http://localhost:8000";
@@ -170,7 +135,7 @@ export function StatusPage() {
 			const preloadRange = 80;
 			const progressPercentage =
 				(tracker.completedTasks / tracker.totalTasks) * preloadRange;
-			setLoadingProgress(baseProgress + progressPercentage);
+			state.setLoadingProgress(baseProgress + progressPercentage);
 		}
 	};
 
@@ -178,48 +143,57 @@ export function StatusPage() {
 	 * Handles heartbeat item hover events to display tooltip.
 	 * @param item - The heartbeat item that was hovered, or null if unhovered
 	 */
-	const handleHeartbeatHover = useCallback((item: HeartbeatItem | null) => {
-		if (item !== null) {
-			setHoveredMonitorIndex({
-				timestamp: item.timestamp,
-				status: item.status,
-				responseTime: item.responseTime,
-				count: item.count,
-				avgResponseTime: item.avgResponseTime,
-				typeLabel: item.typeLabel,
-				degradedCount: item.degradedCount,
-				downCount: item.downCount,
-			});
-		} else {
-			setHoveredMonitorIndex(null);
-		}
-	}, []);
+	const handleHeartbeatHover = useCallback(
+		(item: HeartbeatItem | null) => {
+			if (item !== null) {
+				state.setHoveredMonitorIndex({
+					timestamp: item.timestamp,
+					status: item.status,
+					responseTime: item.responseTime,
+					count: item.count,
+					avgResponseTime: item.avgResponseTime,
+					typeLabel: item.typeLabel,
+					degradedCount: item.degradedCount,
+					downCount: item.downCount,
+				});
+			} else {
+				state.setHoveredMonitorIndex(null);
+			}
+		},
+		[state]
+	);
 
-	const handleTooltipMouseMove = useCallback((x: number, y: number) => {
-		setTooltipPos({ x, y });
-	}, []);
+	const handleTooltipMouseMove = useCallback(
+		(x: number, y: number) => {
+			state.setTooltipPos({ x, y });
+		},
+		[state]
+	);
 
 	/**
 	 * Handles tooltip mouse leave events to hide it.
 	 */
 	const handleTooltipMouseLeave = useCallback(() => {
-		setHoveredMonitorIndex(null);
-	}, []);
+		state.setHoveredMonitorIndex(null);
+	}, [state]);
 
 	/**
 	 * Handles the completion of the loading screen fade animation.
 	 */
 	const handleLoadingFadeComplete = useCallback(() => {
-		setShowLoadingScreen(false);
-	}, []);
+		state.setShowLoadingScreen(false);
+	}, [state]);
 
 	/**
 	 * Handles update interval changes from the selector.
 	 * @param interval - The new update interval in seconds
 	 */
-	const handleUpdateIntervalChange = useCallback((interval: number) => {
-		setUpdateInterval(interval);
-	}, []);
+	const handleUpdateIntervalChange = useCallback(
+		(interval: number) => {
+			state.setUpdateInterval(interval);
+		},
+		[state]
+	);
 
 	/**
 	 * Handles heartbeat interval changes for a specific monitor.
@@ -228,12 +202,12 @@ export function StatusPage() {
 	 */
 	const handleHeartbeatIntervalChange = useCallback(
 		(monitor: Monitor, interval: "all" | "hour" | "day" | "week") => {
-			setHeartbeatIntervals((prev) => ({
+			state.setHeartbeatIntervals((prev) => ({
 				...prev,
 				[monitor.name]: interval,
 			}));
 		},
-		[]
+		[state]
 	);
 
 	const createHeartbeatIntervalChangeHandler = useCallback(
@@ -245,9 +219,9 @@ export function StatusPage() {
 	useEffect(() => {
 		const savedLanguage = getCookie("language") as Language | null;
 		const detected = savedLanguage || detectBrowserLanguage();
-		setLanguage(detected);
-		setMounted(true);
-	}, []);
+		state.setLanguage(detected);
+		state.setMounted(true);
+	}, [state]);
 
 	useEffect(() => {
 		/**
@@ -258,13 +232,13 @@ export function StatusPage() {
 			const containerWidth = Math.min(viewportWidth * 0.175, 800);
 			const itemWidth = 4;
 			const calculatedCount = Math.max(10, Math.floor(containerWidth / itemWidth));
-			setHeartbeatItemCount(calculatedCount);
+			state.setHeartbeatItemCount(calculatedCount);
 		};
 
 		calculateHeartbeatItems();
 		window.addEventListener("resize", calculateHeartbeatItems);
 		return () => window.removeEventListener("resize", calculateHeartbeatItems);
-	}, []);
+	}, [state]);
 
 	/**
 	 * Fetches configuration and version information from the API.
@@ -275,16 +249,16 @@ export function StatusPage() {
 			const response = await axios.get<ConfigResponse>(`${apiBase}/api/config`);
 			const threshold = response.data.configuration.degraded_threshold;
 			if (threshold) {
-				setDegradedThreshold(threshold);
+				state.setDegradedThreshold(threshold);
 			}
 			const percentageThreshold =
 				response.data.configuration.degraded_percentage_threshold;
 			if (percentageThreshold !== undefined) {
-				setDegradedPercentageThreshold(percentageThreshold);
+				state.setDegradedPercentageThreshold(percentageThreshold);
 			}
 			const footer = response.data.configuration.footerText;
 			if (footer) {
-				setFooterText(footer);
+				state.setFooterText(footer);
 			}
 		} catch (error) {
 			console.error("Failed to fetch config:", error);
@@ -296,10 +270,10 @@ export function StatusPage() {
 				frontend_version?: string;
 			}>(`${apiBase}/api/versions`);
 			if (versionResponse.data.api_version) {
-				setApiVersion(versionResponse.data.api_version);
+				state.setApiVersion(versionResponse.data.api_version);
 			}
 			if (versionResponse.data.frontend_version) {
-				setFrontendVersion(versionResponse.data.frontend_version);
+				state.setFrontendVersion(versionResponse.data.frontend_version);
 			}
 		} catch (error) {
 			console.error("Failed to fetch versions:", error);
@@ -315,19 +289,19 @@ export function StatusPage() {
 			const response = await axios.get<ApiResponse>(`${apiBase}/api/status`, {
 				params: { hours: 24 },
 			});
-			setMonitors(response.data.monitors);
-			setLastUpdated(new Date());
+			state.setMonitors(response.data.monitors);
+			state.setLastUpdated(new Date());
 
 			const hasDown = response.data.monitors.some((m) => !m.current_status.is_up);
 			const hasDegraded = response.data.monitors.some((m) =>
 				m.history.some(
-					(r) => r.response_time && r.response_time * 1000 > degradedThreshold
+					(r) => r.response_time && r.response_time * 1000 > state.degradedThreshold
 				)
 			);
 
-			if (hasDown) setOverallStatus("down");
-			else if (hasDegraded) setOverallStatus("degraded");
-			else setOverallStatus("up");
+			if (hasDown) state.setOverallStatus("down");
+			else if (hasDegraded) state.setOverallStatus("degraded");
+			else state.setOverallStatus("up");
 		} catch (error) {
 			console.error("Failed to fetch status:", error);
 		}
@@ -361,7 +335,7 @@ export function StatusPage() {
 				}
 			);
 			const key = `${monitorName}:${interval}`;
-			setAggregatedHeartbeat((prev) => ({
+			state.setAggregatedHeartbeat((prev) => ({
 				...prev,
 				[key]: response.data.heartbeat,
 			}));
@@ -419,7 +393,7 @@ export function StatusPage() {
 								}
 							);
 							const key = `${monitor.name}:${interval}`;
-							setAggregatedHeartbeat((prev) => ({
+							state.setAggregatedHeartbeat((prev) => ({
 								...prev,
 								[key]: response.data.heartbeat,
 							}));
@@ -440,19 +414,24 @@ export function StatusPage() {
 		}
 	};
 
+	const initializeRef = useRef(false);
+
 	useEffect(() => {
 		/**
 		 * Initializes the application by fetching config, status, and preloading data.
 		 */
 		const initializeApp = async () => {
-			setLoadingProgress(0);
+			if (initializeRef.current) return;
+			initializeRef.current = true;
+
+			state.setLoadingProgress(0);
 
 			try {
 				await axios.get(`${apiBase}/api/status`, { timeout: 15000 });
-				setBackendUnreachable(false);
+				state.setBackendUnreachable(false);
 
 				fetchConfig();
-				setLoadingProgress(20);
+				state.setLoadingProgress(20);
 
 				const statusResponse = await axios.get<ApiResponse>(
 					`${apiBase}/api/status`,
@@ -461,30 +440,32 @@ export function StatusPage() {
 					}
 				);
 				const fetchedMonitors = statusResponse.data.monitors;
-				setMonitors(fetchedMonitors);
-				setLastUpdated(new Date());
+				state.setMonitors(fetchedMonitors);
+				state.setLastUpdated(new Date());
 
 				const hasDown = fetchedMonitors.some((m) => !m.current_status.is_up);
 				const hasDegraded = fetchedMonitors.some((m) =>
 					m.history.some(
-						(r) => r.response_time && r.response_time * 1000 > degradedThreshold
+						(r) => r.response_time && r.response_time * 1000 > state.degradedThreshold
 					)
 				);
 
-				if (hasDown) setOverallStatus("down");
-				else if (hasDegraded) setOverallStatus("degraded");
-				else setOverallStatus("up");
+				if (hasDown) state.setOverallStatus("down");
+				else if (hasDegraded) state.setOverallStatus("degraded");
+				else state.setOverallStatus("up");
 
 				if (fetchedMonitors.length > 0) {
 					await preloadAllIntervals(fetchedMonitors);
-					setLoadingProgress(100);
+					state.setLoadingProgress(100);
 				} else {
-					setLoadingProgress(100);
+					state.setLoadingProgress(100);
 				}
+
+				state.setShowLoadingScreen(false);
 			} catch (error) {
 				console.error("Backend unreachable:", error);
-				setBackendUnreachable(true);
-				setShowLoadingScreen(false);
+				state.setBackendUnreachable(true);
+				state.setShowLoadingScreen(false);
 				return;
 			}
 		};
@@ -493,30 +474,30 @@ export function StatusPage() {
 	}, []);
 
 	useEffect(() => {
-		setNextUpdate(updateInterval);
+		state.setNextUpdate(state.updateInterval);
 
 		const updateIntervalId = setInterval(() => {
 			fetchStatus();
-			setNextUpdate(updateInterval);
-		}, updateInterval * 1000);
+			state.setNextUpdate(state.updateInterval);
+		}, state.updateInterval * 1000);
 
 		const countdownInterval = setInterval(() => {
-			setNextUpdate((prev) => Math.max(0, prev - 1));
+			state.setNextUpdate((prev) => Math.max(0, prev - 1));
 		}, 1000);
 
 		return () => {
 			clearInterval(updateIntervalId);
 			clearInterval(countdownInterval);
 		};
-	}, [updateInterval]);
+	}, [state.updateInterval, state]);
 
 	useEffect(() => {
-		if (monitors.length === 0) return;
-		monitors.forEach((monitor) => {
-			const interval = heartbeatIntervals[monitor.name] || "all";
+		if (state.monitors.length === 0) return;
+		state.monitors.forEach((monitor) => {
+			const interval = state.heartbeatIntervals[monitor.name] || "all";
 			fetchAggregatedHeartbeat(monitor.name, interval);
 		});
-	}, [heartbeatIntervals, monitors]);
+	}, [state.heartbeatIntervals, state.monitors]);
 
 	/**
 	 * Gets the status indicator text and status for a monitor.
@@ -527,23 +508,23 @@ export function StatusPage() {
 		monitor: Monitor
 	): { text: string; status: "up" | "degraded" | "down" } => {
 		if (!monitor.current_status.is_up) {
-			return { text: t(language, "status_indicator.down"), status: "down" };
+			return { text: t(state.language, "status_indicator.down"), status: "down" };
 		}
 
 		if (monitor.history.length > 0) {
 			const latestRecord = monitor.history[monitor.history.length - 1];
 			if (
 				latestRecord.response_time &&
-				latestRecord.response_time * 1000 > degradedThreshold
+				latestRecord.response_time * 1000 > state.degradedThreshold
 			) {
 				return {
-					text: t(language, "status_indicator.degraded"),
+					text: t(state.language, "status_indicator.degraded"),
 					status: "degraded",
 				};
 			}
 		}
 
-		return { text: t(language, "status_indicator.up"), status: "up" };
+		return { text: t(state.language, "status_indicator.up"), status: "up" };
 	};
 
 	/**
@@ -559,19 +540,19 @@ export function StatusPage() {
 
 	const getHeartbeatData = useCallback(
 		(monitor: Monitor): Array<"up" | "degraded" | "down" | "none"> => {
-			const interval = heartbeatIntervals[monitor.name] || "all";
+			const interval = state.heartbeatIntervals[monitor.name] || "all";
 			const key = `${monitor.name}:${interval}`;
-			const nodes = aggregatedHeartbeat[key] || [];
+			const nodes = state.aggregatedHeartbeat[key] || [];
 
 			if (nodes.length === 0) {
 				if (monitor.history.length === 0) {
-					return Array(heartbeatItemCount).fill("none");
+					return Array(state.heartbeatItemCount).fill("none");
 				}
-				return monitor.history.slice(-heartbeatItemCount).map((r) => {
+				return monitor.history.slice(-state.heartbeatItemCount).map((r) => {
 					if (!r.is_up) {
 						return "down";
 					}
-					if (r.response_time && r.response_time * 1000 > degradedThreshold) {
+					if (r.response_time && r.response_time * 1000 > state.degradedThreshold) {
 						return "degraded";
 					}
 					return "up";
@@ -587,7 +568,7 @@ export function StatusPage() {
 						return "degraded";
 					}
 				} else {
-					if (node.issue_percentage > degradedPercentageThreshold) {
+					if (node.issue_percentage > state.degradedPercentageThreshold) {
 						return "degraded";
 					}
 				}
@@ -595,46 +576,54 @@ export function StatusPage() {
 			});
 		},
 		[
-			heartbeatIntervals,
-			aggregatedHeartbeat,
-			heartbeatItemCount,
-			degradedThreshold,
-			degradedPercentageThreshold,
+			state.heartbeatIntervals,
+			state.aggregatedHeartbeat,
+			state.heartbeatItemCount,
+			state.degradedThreshold,
+			state.degradedPercentageThreshold,
 		]
 	);
 
 	const getHeartbeatTimestamps = useCallback(
 		(monitor: Monitor): Date[] => {
-			const interval = heartbeatIntervals[monitor.name] || "all";
+			const interval = state.heartbeatIntervals[monitor.name] || "all";
 			const key = `${monitor.name}:${interval}`;
-			const nodes = aggregatedHeartbeat[key] || [];
+			const nodes = state.aggregatedHeartbeat[key] || [];
 
 			if (nodes.length === 0) {
 				return monitor.history
-					.slice(-heartbeatItemCount)
+					.slice(-state.heartbeatItemCount)
 					.map((r) => new Date(r.timestamp));
 			}
 
 			return nodes.map((node) => new Date(node.timestamp));
 		},
-		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount]
+		[
+			state.heartbeatIntervals,
+			state.aggregatedHeartbeat,
+			state.heartbeatItemCount,
+		]
 	);
 
 	const getHeartbeatResponseTimes = useCallback(
 		(monitor: Monitor): (number | null)[] => {
-			const interval = heartbeatIntervals[monitor.name] || "all";
+			const interval = state.heartbeatIntervals[monitor.name] || "all";
 			const key = `${monitor.name}:${interval}`;
-			const nodes = aggregatedHeartbeat[key] || [];
+			const nodes = state.aggregatedHeartbeat[key] || [];
 
 			if (nodes.length === 0) {
 				return monitor.history
-					.slice(-heartbeatItemCount)
+					.slice(-state.heartbeatItemCount)
 					.map((r) => r.response_time);
 			}
 
 			return nodes.map((node) => node.avg_response_time);
 		},
-		[heartbeatIntervals, aggregatedHeartbeat, heartbeatItemCount]
+		[
+			state.heartbeatIntervals,
+			state.aggregatedHeartbeat,
+			state.heartbeatItemCount,
+		]
 	);
 
 	const getHeartbeatMetadata = useMemo(() => {
@@ -647,22 +636,26 @@ export function StatusPage() {
 			degradedCount?: number;
 			downCount?: number;
 		}> => {
-			const interval = heartbeatIntervals[monitor.name] || "all";
+			const interval = state.heartbeatIntervals[monitor.name] || "all";
 			const key = `${monitor.name}:${interval}`;
-			const nodes = aggregatedHeartbeat[key] || [];
+			const nodes = state.aggregatedHeartbeat[key] || [];
 
 			if (nodes.length === 0) {
-				return monitor.history.slice(0, heartbeatItemCount).map(() => ({
+				return monitor.history.slice(0, state.heartbeatItemCount).map(() => ({
 					count: 1,
 					avgResponseTime: null,
-					typeLabel: t(language, "time_range.all"),
+					typeLabel: t(state.language, "time_range.all"),
 					degradedCount: 0,
 					downCount: 0,
 				}));
 			}
 
 			const localeMap =
-				language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US";
+				state.language === "ja"
+					? "ja-JP"
+					: state.language === "ko"
+					? "ko-KR"
+					: "en-US";
 
 			/**
 			 * Gets the timezone abbreviation for the current locale.
@@ -733,7 +726,12 @@ export function StatusPage() {
 				};
 			});
 		};
-	}, [heartbeatIntervals, aggregatedHeartbeat, language, heartbeatItemCount]);
+	}, [
+		state.heartbeatIntervals,
+		state.aggregatedHeartbeat,
+		state.language,
+		state.heartbeatItemCount,
+	]);
 
 	/**
 	 * Gets the localized label for a monitor status.
@@ -747,9 +745,10 @@ export function StatusPage() {
 			return "No Data";
 		}
 		const key = `status_indicator.${status}` as const;
-		return t(language, key);
+		return t(state.language, key);
 	};
-	if (!mounted) {
+
+	if (!state.mounted) {
 		return null;
 	}
 
@@ -761,34 +760,35 @@ export function StatusPage() {
 						<div className={styles.headerLeft}>
 							<img src={`${apiBase}/logo.png`} alt="logo" className={styles.logo} />
 						</div>
-						<LanguageSelector language={language} onLanguageChange={setLanguage} />
+						<LanguageSelector
+							language={state.language}
+							onLanguageChange={state.setLanguage}
+						/>
+					</div>
+					<div className={styles.headerCenter}>
+						<StatusIcon status={state.overallStatus} />
+						<h1 className={styles.brand}>{getStatusLabel(state.overallStatus)}</h1>
+						<p className={styles.subtitle}>
+							{state.overallStatus === "up"
+								? t(state.language, "status.up")
+								: state.overallStatus === "degraded"
+								? t(state.language, "status.degraded")
+								: t(state.language, "status.down")}
+						</p>
 					</div>
 				</div>
 			</header>
 
-			<div className={styles.headerCenter}>
-				<StatusIcon status={overallStatus} />
-				<h1 className={styles.brand}>{getStatusLabel(overallStatus)}</h1>
-				<p className={styles.subtitle}>
-					{overallStatus === "up"
-						? t(language, "status.up")
-						: overallStatus === "degraded"
-						? t(language, "status.degraded")
-						: t(language, "status.down")}
-				</p>
-			</div>
-
 			<main className={styles.container}>
 				<section className={styles.statusOverview}>
-					{monitors.map((monitor) => {
+					{state.monitors.map((monitor) => {
 						const { text, status } = getStatusIndicatorText(monitor);
 						const uptime = getUptimePercentage(monitor);
 						const heartbeat = getHeartbeatData(monitor);
 						const timestamps = getHeartbeatTimestamps(monitor);
 						const responseTimes = getHeartbeatResponseTimes(monitor);
 						const metadata = getHeartbeatMetadata(monitor);
-						const interval = heartbeatIntervals[monitor.name] || "all";
-
+						const interval = state.heartbeatIntervals[monitor.name] || "all";
 						return (
 							<div
 								key={monitor.name}
@@ -800,7 +800,7 @@ export function StatusPage() {
 									</div>
 									<div className={styles.statusHeaderRight}>
 										<HeartbeatIntervalSelector
-											language={language}
+											language={state.language}
 											onIntervalChange={createHeartbeatIntervalChangeHandler(monitor)}
 										/>
 										<div className={styles.statusIndicator}>
@@ -815,14 +815,14 @@ export function StatusPage() {
 										timestamps={timestamps}
 										responseTimes={responseTimes}
 										metadata={metadata}
-										maxItems={heartbeatItemCount}
+										maxItems={state.heartbeatItemCount}
 										interval={interval}
 										onHover={handleHeartbeatHover}
 										onMouseMove={handleTooltipMouseMove}
 										onMouseLeave={handleTooltipMouseLeave}
 									/>
 									<div className={styles.uptimeText}>
-										{t(language, "uptime")} {uptime}%
+										{t(state.language, "uptime")} {uptime}%
 									</div>
 								</div>
 							</div>
@@ -830,7 +830,7 @@ export function StatusPage() {
 					})}
 				</section>
 
-				{hoveredMonitorIndex !== null && (
+				{state.hoveredMonitorIndex !== null && (
 					<div
 						className={styles.heartbeatTooltip}
 						style={{
@@ -839,9 +839,13 @@ export function StatusPage() {
 						}}
 					>
 						<div className={styles.tooltipTime}>
-							{hoveredMonitorIndex.typeLabel ||
-								hoveredMonitorIndex.timestamp?.toLocaleString(
-									language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US",
+							{state.hoveredMonitorIndex.typeLabel ||
+								state.hoveredMonitorIndex.timestamp?.toLocaleString(
+									state.language === "ja"
+										? "ja-JP"
+										: state.language === "ko"
+										? "ko-KR"
+										: "en-US",
 									{
 										year: "numeric",
 										month: "2-digit",
@@ -855,65 +859,72 @@ export function StatusPage() {
 						</div>
 						<div
 							className={`${styles.tooltipStatus} ${
-								styles[hoveredMonitorIndex.status]
+								styles[state.hoveredMonitorIndex.status]
 							}`}
 						>
-							{getStatusLabel(hoveredMonitorIndex.status)}
+							{getStatusLabel(state.hoveredMonitorIndex.status)}
 						</div>
-						{hoveredMonitorIndex.interval &&
-						hoveredMonitorIndex.interval !== "all" &&
-						((hoveredMonitorIndex.degradedCount !== undefined &&
-							hoveredMonitorIndex.degradedCount > 0) ||
-							(hoveredMonitorIndex.downCount !== undefined &&
-								hoveredMonitorIndex.downCount > 0)) ? (
+						{state.hoveredMonitorIndex.interval &&
+						state.hoveredMonitorIndex.interval !== "all" &&
+						((state.hoveredMonitorIndex.degradedCount !== undefined &&
+							state.hoveredMonitorIndex.degradedCount > 0) ||
+							(state.hoveredMonitorIndex.downCount !== undefined &&
+								state.hoveredMonitorIndex.downCount > 0)) ? (
 							<div className={styles.tooltipIssues}>
-								{hoveredMonitorIndex.degradedCount !== undefined &&
-								hoveredMonitorIndex.degradedCount > 0 ? (
+								{state.hoveredMonitorIndex.degradedCount !== undefined &&
+								state.hoveredMonitorIndex.degradedCount > 0 ? (
 									<div className={styles.tooltipIssueDegraded}>
-										{t(language, "heartbeat.degraded")}:{" "}
-										{hoveredMonitorIndex.degradedCount}
+										{t(state.language, "heartbeat.degraded")}:{" "}
+										{state.hoveredMonitorIndex.degradedCount}
 									</div>
 								) : null}
-								{hoveredMonitorIndex.downCount !== undefined &&
-								hoveredMonitorIndex.downCount > 0 ? (
+								{state.hoveredMonitorIndex.downCount !== undefined &&
+								state.hoveredMonitorIndex.downCount > 0 ? (
 									<div className={styles.tooltipIssueDown}>
-										{t(language, "heartbeat.down")}: {hoveredMonitorIndex.downCount}
+										{t(state.language, "heartbeat.down")}:{" "}
+										{state.hoveredMonitorIndex.downCount}
 									</div>
 								) : null}
 							</div>
 						) : null}
 						<div className={styles.tooltipPing}>
-							{hoveredMonitorIndex.avgResponseTime !== null &&
-							hoveredMonitorIndex.avgResponseTime !== undefined ? (
+							{state.hoveredMonitorIndex.avgResponseTime !== null &&
+							state.hoveredMonitorIndex.avgResponseTime !== undefined ? (
 								<>
-									{t(language, "heartbeat.avg_ping")}:{" "}
-									{(hoveredMonitorIndex.avgResponseTime * 1000).toFixed(0)}ms
+									{t(state.language, "heartbeat.avg_ping")}:{" "}
+									{(state.hoveredMonitorIndex.avgResponseTime * 1000).toFixed(0)}ms
 								</>
-							) : hoveredMonitorIndex.responseTime !== null &&
-							  hoveredMonitorIndex.responseTime !== undefined ? (
+							) : state.hoveredMonitorIndex.responseTime !== null &&
+							  state.hoveredMonitorIndex.responseTime !== undefined ? (
 								<>
-									{t(language, "heartbeat.ping")}:{" "}
-									{(hoveredMonitorIndex.responseTime * 1000).toFixed(0)}ms
+									{t(state.language, "heartbeat.ping")}:{" "}
+									{(state.hoveredMonitorIndex.responseTime * 1000).toFixed(0)}ms
 								</>
 							) : (
-								<>{t(language, "heartbeat.ping")}: N/A</>
+								<>{t(state.language, "heartbeat.ping")}: N/A</>
 							)}
 						</div>
-						{hoveredMonitorIndex.count && hoveredMonitorIndex.count > 1 && (
-							<div className={styles.tooltipCount}>
-								{t(language, "heartbeat.samples")}: {hoveredMonitorIndex.count}
-							</div>
-						)}
+						{state.hoveredMonitorIndex.count &&
+							state.hoveredMonitorIndex.count > 1 && (
+								<div className={styles.tooltipCount}>
+									{t(state.language, "heartbeat.samples")}:{" "}
+									{state.hoveredMonitorIndex.count}
+								</div>
+							)}
 					</div>
 				)}
 			</main>
 
-			{lastUpdated && (
+			{state.lastUpdated && (
 				<div className={styles.updateInfo}>
 					<p>
-						{t(language, "footer.last_updated")}{" "}
-						{lastUpdated.toLocaleString(
-							language === "ja" ? "ja-JP" : language === "ko" ? "ko-KR" : "en-US",
+						{t(state.language, "footer.last_updated")}{" "}
+						{state.lastUpdated.toLocaleString(
+							state.language === "ja"
+								? "ja-JP"
+								: state.language === "ko"
+								? "ko-KR"
+								: "en-US",
 							{
 								year: "numeric",
 								month: "2-digit",
@@ -924,8 +935,8 @@ export function StatusPage() {
 								timeZoneName: "short",
 							}
 						)}{" "}
-						・ {t(language, "footer.next_update")} {nextUpdate}
-						{t(language, "footer.seconds")}
+						・ {t(state.language, "footer.next_update")} {state.nextUpdate}
+						{t(state.language, "footer.seconds")}
 					</p>
 					<UpdateIntervalSelector onIntervalChange={handleUpdateIntervalChange} />
 				</div>
@@ -934,16 +945,16 @@ export function StatusPage() {
 			<footer>
 				<div className={styles.footerLinks}>
 					<a href={`${apiBase}/api/docs`} target="_blank" rel="noopener noreferrer">
-						{t(language, "footer.api_documentation")}
+						{t(state.language, "footer.api_documentation")}
 					</a>
 					<span className={styles.footerLinksSeparator}>|</span>
 					<a href={`${apiBase}/rss`} target="_blank" rel="noopener noreferrer">
-						{t(language, "footer.rss_feed")}
+						{t(state.language, "footer.rss_feed")}
 					</a>
 				</div>
 				<p className={styles.footerText}>
-					{footerText}
-					{apiVersion || frontendVersion ? (
+					{state.footerText}
+					{state.apiVersion || state.frontendVersion ? (
 						<>
 							<br />
 							<span
@@ -954,9 +965,9 @@ export function StatusPage() {
 									display: "block",
 								}}
 							>
-								{apiVersion && `API v${apiVersion}`}
-								{apiVersion && frontendVersion && " · "}
-								{frontendVersion && `Frontend v${frontendVersion}`}
+								{state.apiVersion && `API v${state.apiVersion}`}
+								{state.apiVersion && state.frontendVersion && " · "}
+								{state.frontendVersion && `Frontend v${state.frontendVersion}`}
 							</span>
 						</>
 					) : null}
@@ -965,15 +976,15 @@ export function StatusPage() {
 		</>
 	);
 
-	return backendUnreachable ? (
-		<BackendUnreachable apiBase={apiBase} language={language} />
+	return state.backendUnreachable ? (
+		<BackendUnreachable apiBase={apiBase} language={state.language} />
 	) : (
 		<>
-			{showLoadingScreen && (
+			{state.showLoadingScreen && (
 				<LoadingScreen
 					apiBase={apiBase}
-					language={language}
-					progress={loadingProgress}
+					language={state.language}
+					progress={state.loadingProgress}
 					onFadeComplete={handleLoadingFadeComplete}
 				/>
 			)}
