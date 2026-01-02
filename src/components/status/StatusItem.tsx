@@ -1,8 +1,8 @@
 import { memo } from "react";
 import styles from "@/styles/theme.module.css";
-import { HeartbeatBar } from "./StatusComponents";
-import { HeartbeatIntervalSelector } from "../selectors/HeartbeatIntervalSelector";
-import { Language, t } from "@/lib/utils/i18n";
+import { StatusItemHeader } from "./StatusItemHeader";
+import { StatusHeartbeatSection } from "./StatusHeartbeatSection";
+import { Language } from "@/lib/utils/i18n";
 import type { Monitor, HeartbeatInterval } from "@/types/models";
 
 interface StatusItemProps {
@@ -66,35 +66,25 @@ export const StatusItem = memo(function StatusItem({
 			className={`${styles.statusItem} ${styles[statusValue]}`}
 			key={monitor.name}
 		>
-			<div className={styles.statusHeader}>
-				<h2 className={styles.statusText}>{monitor.name}</h2>
-				<div className={styles.statusHeaderRight}>
-					<HeartbeatIntervalSelector
-						language={language}
-						onIntervalChange={onIntervalChange}
-					/>
-					<div className={styles.statusIndicator}>
-						<p>{statusText}</p>
-						<span className={styles.indicator} />
-					</div>
-				</div>
-			</div>
-			<div className={styles.heartbeatContainer}>
-				<HeartbeatBar
-					data={heartbeat}
-					timestamps={timestamps}
-					responseTimes={responseTimes}
-					metadata={metadata}
-					maxItems={maxItems}
-					interval={interval}
-					onHover={onHeartbeatHover}
-					onMouseMove={onTooltipMouseMove}
-					onMouseLeave={onTooltipMouseLeave}
-				/>
-				<div className={styles.uptimeText}>
-					{t(language, "uptime")} {uptime}%
-				</div>
-			</div>
+			<StatusItemHeader
+				monitorName={monitor.name}
+				statusText={statusText}
+				language={language}
+				onIntervalChange={onIntervalChange}
+			/>
+			<StatusHeartbeatSection
+				heartbeat={heartbeat}
+				timestamps={timestamps}
+				responseTimes={responseTimes}
+				metadata={metadata}
+				uptime={uptime}
+				interval={interval}
+				maxItems={maxItems}
+				language={language}
+				onHover={onHeartbeatHover}
+				onMouseMove={onTooltipMouseMove}
+				onMouseLeave={onTooltipMouseLeave}
+			/>
 		</div>
 	);
 });
