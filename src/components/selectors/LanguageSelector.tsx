@@ -8,20 +8,13 @@ import {
 	detectBrowserLanguage,
 } from "@/lib/utils/i18n";
 import { getCookie, setCookie } from "@/lib/utils/cookies";
-import { Selector, type SelectorOption } from "./Selector";
+import { Selector } from "./Selector";
+import { LANGUAGE_OPTIONS, STORAGE_KEY_LANGUAGE } from "@/lib/constants";
 
 interface LanguageSelectorProps {
 	language?: Language;
 	onLanguageChange?: (lang: Language) => void;
 }
-
-const LANGUAGE_OPTIONS: SelectorOption[] = [
-	{ value: "en", label: "English" },
-	{ value: "ja", label: "日本語" },
-	{ value: "ko", label: "한국어" },
-	{ value: "zh-TW", label: "繁體中文" },
-	{ value: "zh-CN", label: "简体中文" },
-];
 
 export function LanguageSelector({
 	language: initialLanguage,
@@ -31,7 +24,7 @@ export function LanguageSelector({
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
-		const savedLanguage = getCookie("language") as Language | null;
+		const savedLanguage = getCookie(STORAGE_KEY_LANGUAGE) as Language | null;
 		const detected = savedLanguage || detectBrowserLanguage();
 
 		setLanguage(detected);
@@ -42,7 +35,7 @@ export function LanguageSelector({
 	const handleLanguageChange = (value: string | number) => {
 		const lang = value as Language;
 		setLanguage(lang);
-		setCookie("language", lang);
+		setCookie(STORAGE_KEY_LANGUAGE, lang);
 		onLanguageChange?.(lang);
 	};
 

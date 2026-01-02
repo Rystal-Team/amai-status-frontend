@@ -1,7 +1,4 @@
-/**
- * Domain Model Types
- * Core data structures and business logic types
- */
+
 
 export interface StatusRecord {
 	timestamp: string;

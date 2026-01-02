@@ -1,8 +1,3 @@
-/**
- * API Response Types
- * Types for API responses from the backend
- */
-
 export interface ConfigResponse {
 	configuration: {
 		degraded_threshold: number;
