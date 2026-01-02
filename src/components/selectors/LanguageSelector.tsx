@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/theme.module.css";
 import {
 	Language,
@@ -32,12 +32,15 @@ export function LanguageSelector({
 		setMounted(true);
 	}, [onLanguageChange]);
 
-	const handleLanguageChange = (value: string | number) => {
-		const lang = value as Language;
-		setLanguage(lang);
-		setCookie(STORAGE_KEY_LANGUAGE, lang);
-		onLanguageChange?.(lang);
-	};
+	const handleLanguageChange = useCallback(
+		(value: string | number) => {
+			const lang = value as Language;
+			setLanguage(lang);
+			setCookie(STORAGE_KEY_LANGUAGE, lang);
+			onLanguageChange?.(lang);
+		},
+		[onLanguageChange]
+	);
 
 	if (!mounted) return null;
 

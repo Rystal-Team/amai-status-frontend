@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/theme.module.css";
 import { Selector } from "./Selector";
 import {
@@ -27,12 +27,15 @@ export function UpdateIntervalSelector({
 		setMounted(true);
 	}, [onIntervalChange]);
 
-	const handleIntervalChange = (value: string | number) => {
-		const newInterval = typeof value === "string" ? parseInt(value, 10) : value;
-		setInterval(newInterval);
-		localStorage.setItem(STORAGE_KEY_UPDATE_INTERVAL, String(newInterval));
-		onIntervalChange?.(newInterval);
-	};
+	const handleIntervalChange = useCallback(
+		(value: string | number) => {
+			const newInterval = typeof value === "string" ? parseInt(value, 10) : value;
+			setInterval(newInterval);
+			localStorage.setItem(STORAGE_KEY_UPDATE_INTERVAL, String(newInterval));
+			onIntervalChange?.(newInterval);
+		},
+		[onIntervalChange]
+	);
 
 	if (!mounted) return null;
 
