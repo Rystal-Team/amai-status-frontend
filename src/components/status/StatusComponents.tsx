@@ -133,13 +133,6 @@ const HeartbeatBarComponent = ({
 			const slicedData = data.slice(-effectiveMaxItems);
 			const startIdx = Math.max(0, data.length - effectiveMaxItems);
 
-			if (metadata && metadata.length > 0) {
-				console.log(
-					`[HeartbeatBar displayItems] data.length=${data.length}, metadata.length=${metadata.length}, startIdx=${startIdx}, effectiveMaxItems=${effectiveMaxItems}`
-				);
-				console.log(`[HeartbeatBar] First item metadata:`, metadata[startIdx]);
-			}
-
 			setDisplayItems(
 				slicedData.map((status, i) => ({
 					status,
