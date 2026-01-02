@@ -4,14 +4,17 @@ import { useEffect, useCallback, useRef } from "react";
 import styles from "@/styles/theme.module.css";
 import { StatusHeader } from "./StatusHeader";
 import { StatusItem } from "./StatusItem";
+import { HeartbeatTooltip } from "./HeartbeatTooltip";
 import { UpdateIntervalSelector } from "../selectors/UpdateIntervalSelector";
 import { LoadingScreen } from "../common/LoadingScreen";
 import { BackendUnreachable } from "../errors/BackendUnreachable";
 import { Language, t, detectBrowserLanguage } from "@/lib/utils/i18n";
 import { getCookie } from "@/lib/utils/cookies";
+import { formatLocalDateTime } from "@/lib/utils/dateFormat";
 import { useStatusPageState } from "@/lib/hooks/useStatusPageState";
 import { useHeartbeatComputation } from "./useHeartbeatComputation";
 import { useStatusComputation } from "./useStatusComputation";
+import { useTooltipComputation } from "./useTooltipComputation";
 import axios from "axios";
 
 interface StatusRecord {
@@ -524,6 +527,12 @@ export function StatusPage() {
 		getHeartbeatMetadata,
 	} = heartbeatComputation;
 
+	// Use tooltip computation hook
+	const { computeTooltipData } = useTooltipComputation(
+		state.language,
+		getStatusLabel
+	);
+
 	if (!state.mounted) {
 		return null;
 	}
@@ -571,112 +580,35 @@ export function StatusPage() {
 					})}
 				</section>
 
-				{state.hoveredMonitorIndex !== null && (
-					<div
-						className={styles.heartbeatTooltip}
-						style={{
-							left: `${getAdjustedTooltipPos().x}px`,
-							top: `${getAdjustedTooltipPos().y}px`,
-						}}
-					>
-						<div className={styles.tooltipTime}>
-							{state.hoveredMonitorIndex.typeLabel ||
-								state.hoveredMonitorIndex.timestamp?.toLocaleString(
-									state.language === "ja"
-										? "ja-JP"
-										: state.language === "ko"
-										? "ko-KR"
-										: "en-US",
-									{
-										year: "numeric",
-										month: "2-digit",
-										day: "2-digit",
-										hour: "2-digit",
-										minute: "2-digit",
-										second: "2-digit",
-										timeZoneName: "short",
-									}
-								)}
-						</div>
-						<div
-							className={`${styles.tooltipStatus} ${
-								styles[state.hoveredMonitorIndex.status]
-							}`}
-						>
-							{getStatusLabel(state.hoveredMonitorIndex.status)}
-						</div>
-						{state.hoveredMonitorIndex.interval &&
-						state.hoveredMonitorIndex.interval !== "all" &&
-						((state.hoveredMonitorIndex.degradedCount !== undefined &&
-							state.hoveredMonitorIndex.degradedCount > 0) ||
-							(state.hoveredMonitorIndex.downCount !== undefined &&
-								state.hoveredMonitorIndex.downCount > 0)) ? (
-							<div className={styles.tooltipIssues}>
-								{state.hoveredMonitorIndex.degradedCount !== undefined &&
-								state.hoveredMonitorIndex.degradedCount > 0 ? (
-									<div className={styles.tooltipIssueDegraded}>
-										{t(state.language, "heartbeat.degraded")}:{" "}
-										{state.hoveredMonitorIndex.degradedCount}
-									</div>
-								) : null}
-								{state.hoveredMonitorIndex.downCount !== undefined &&
-								state.hoveredMonitorIndex.downCount > 0 ? (
-									<div className={styles.tooltipIssueDown}>
-										{t(state.language, "heartbeat.down")}:{" "}
-										{state.hoveredMonitorIndex.downCount}
-									</div>
-								) : null}
-							</div>
-						) : null}
-						<div className={styles.tooltipPing}>
-							{state.hoveredMonitorIndex.avgResponseTime !== null &&
-							state.hoveredMonitorIndex.avgResponseTime !== undefined ? (
-								<>
-									{t(state.language, "heartbeat.avg_ping")}:{" "}
-									{(state.hoveredMonitorIndex.avgResponseTime * 1000).toFixed(0)}ms
-								</>
-							) : state.hoveredMonitorIndex.responseTime !== null &&
-							  state.hoveredMonitorIndex.responseTime !== undefined ? (
-								<>
-									{t(state.language, "heartbeat.ping")}:{" "}
-									{(state.hoveredMonitorIndex.responseTime * 1000).toFixed(0)}ms
-								</>
-							) : (
-								<>{t(state.language, "heartbeat.ping")}: N/A</>
-							)}
-						</div>
-						{state.hoveredMonitorIndex.count &&
-							state.hoveredMonitorIndex.count > 1 && (
-								<div className={styles.tooltipCount}>
-									{t(state.language, "heartbeat.samples")}:{" "}
-									{state.hoveredMonitorIndex.count}
-								</div>
-							)}
-					</div>
-				)}
+				{state.hoveredMonitorIndex !== null &&
+					(() => {
+						const tooltipData = computeTooltipData(state.hoveredMonitorIndex);
+						if (!tooltipData) return null;
+						const { x, y } = getAdjustedTooltipPos();
+						return (
+							<HeartbeatTooltip
+								left={x}
+								top={y}
+								timeDisplay={tooltipData.timeDisplay}
+								status={state.hoveredMonitorIndex.status}
+								statusLabel={tooltipData.statusLabel}
+								showIssues={tooltipData.showIssues}
+								degradedCount={tooltipData.degradedCount}
+								downCount={tooltipData.downCount}
+								pingText={tooltipData.pingText}
+								sampleCount={tooltipData.sampleCount}
+								showSampleCount={tooltipData.showSampleCount}
+								language={state.language}
+							/>
+						);
+					})()}
 			</main>
-
 			{state.lastUpdated && (
 				<div className={styles.updateInfo}>
 					<p>
 						{t(state.language, "footer.last_updated")}{" "}
-						{state.lastUpdated.toLocaleString(
-							state.language === "ja"
-								? "ja-JP"
-								: state.language === "ko"
-								? "ko-KR"
-								: "en-US",
-							{
-								year: "numeric",
-								month: "2-digit",
-								day: "2-digit",
-								hour: "2-digit",
-								minute: "2-digit",
-								second: "2-digit",
-								timeZoneName: "short",
-							}
-						)}{" "}
-						・ {t(state.language, "footer.next_update")} {state.nextUpdate}
+						{formatLocalDateTime(state.lastUpdated, state.language)} ・{" "}
+						{t(state.language, "footer.next_update")} {state.nextUpdate}
 						{t(state.language, "footer.seconds")}
 					</p>
 					<UpdateIntervalSelector onIntervalChange={handleUpdateIntervalChange} />
