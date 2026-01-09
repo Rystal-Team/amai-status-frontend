@@ -1,3 +1,5 @@
+import type { AggregatedHeartbeatNode } from "./models";
+
 export interface ConfigResponse {
 	configuration: {
 		degraded_threshold: number;
@@ -19,5 +21,5 @@ export interface VersionResponse {
 export interface AggregatedHeartbeatResponse {
 	monitor_name: string;
 	interval: string;
-	heartbeat: Record<string, unknown>[];
+	heartbeat: AggregatedHeartbeatNode[];
 }

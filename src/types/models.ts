@@ -7,7 +7,6 @@ export interface StatusRecord {
 
 export interface Monitor {
 	name: string;
-	url: string;
 	current_status: {
 		is_up: boolean | null;
 		status_code: number | null;
@@ -31,18 +30,4 @@ export interface AggregatedHeartbeatNode {
 	degraded_count: number;
 	down_count: number;
 	issue_percentage: number;
-}
-
-export interface TooltipInfo {
-	monitorIdx: number;
-	itemIdx: number;
-	timestamp: Date;
-	status: "up" | "degraded" | "down" | "none";
-	responseTime?: number | null;
-	count?: number;
-	avgResponseTime?: number | null;
-	typeLabel?: string;
-	degradedCount?: number;
-	downCount?: number;
-	interval?: "all" | "hour" | "day" | "week";
 }
