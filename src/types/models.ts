@@ -7,7 +7,6 @@ export interface StatusRecord {
 
 export interface Monitor {
 	name: string;
-	url: string;
 	current_status: {
 		is_up: boolean | null;
 		status_code: number | null;
