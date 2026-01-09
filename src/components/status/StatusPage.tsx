@@ -15,7 +15,7 @@ import { useStatusComputation } from "./useStatusComputation";
 import { useTooltipComputation } from "./useTooltipComputation";
 import type { Monitor } from "@/types/models";
 import type { ConfigResponse, AggregatedHeartbeatResponse } from "@/types/api";
-import type { HeartbeatItem } from "@/types/ui";
+import type { HoveredMonitorInfo } from "@/types/ui";
 import type { ApiStatusResponse } from "@/lib/services/apiService";
 import axios from "axios";
 
@@ -87,7 +87,7 @@ export function StatusPage() {
 	 * @param item - The heartbeat item that was hovered, or null if unhovered
 	 */
 	const handleHeartbeatHover = useCallback(
-		(item: HeartbeatItem | null) => {
+		(item: HoveredMonitorInfo | null) => {
 			if (item !== null) {
 				state.setHoveredMonitorIndex({
 					timestamp: item.timestamp,

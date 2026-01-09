@@ -31,17 +31,3 @@ export interface AggregatedHeartbeatNode {
 	down_count: number;
 	issue_percentage: number;
 }
-
-export interface TooltipInfo {
-	monitorIdx: number;
-	itemIdx: number;
-	timestamp: Date;
-	status: "up" | "degraded" | "down" | "none";
-	responseTime?: number | null;
-	count?: number;
-	avgResponseTime?: number | null;
-	typeLabel?: string;
-	degradedCount?: number;
-	downCount?: number;
-	interval?: "all" | "hour" | "day" | "week";
-}
